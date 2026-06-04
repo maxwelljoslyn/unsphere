@@ -9,4 +9,4 @@ User = get_user_model()
 class CustomUserAdmin(UserAdmin):
     list_display = ("username", "email", "email_confirmed", "is_superuser", "is_staff")
     list_filter = ("email_confirmed", "is_superuser", "is_staff", "is_active")
-    fieldsets = UserAdmin.fieldsets + (("Parrot", {"fields": ("email_confirmed",)}),)
+    fieldsets = UserAdmin.fieldsets + (("Unsphere", {"fields": ("email_confirmed",)}),)

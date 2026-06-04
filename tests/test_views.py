@@ -179,7 +179,7 @@ def test_strength_add_happy_path(auth_client, workout, strength_movement):
 
 @pytest.mark.django_db
 def test_cardio_edit(auth_client, workout, cardio_movement):
-    from parrot.units import u
+    from unsphere.units import u
 
     ex = CardioExercise.objects.create(
         workout=workout, movement=cardio_movement, distance=u("3 miles")
@@ -203,7 +203,7 @@ def test_cardio_edit(auth_client, workout, cardio_movement):
 
 @pytest.mark.django_db
 def test_cardio_delete(auth_client, workout, cardio_movement):
-    from parrot.units import u
+    from unsphere.units import u
 
     ex = CardioExercise.objects.create(
         workout=workout, movement=cardio_movement, distance=u("3 miles")

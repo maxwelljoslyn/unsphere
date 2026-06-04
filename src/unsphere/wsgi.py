@@ -10,5 +10,5 @@ if str(SRC_DIR) not in sys.path:
 
 from django.core.wsgi import get_wsgi_application  # noqa: E402
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "parrot.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "unsphere.settings")
 application = get_wsgi_application()

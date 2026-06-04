@@ -1,8 +1,8 @@
 from django.apps import AppConfig
 
 
-class ParrotConfig(AppConfig):
-    name = "parrot"
+class UnsphereConfig(AppConfig):
+    name = "unsphere"
 
     def ready(self):
         from django.db.backends.signals import connection_created

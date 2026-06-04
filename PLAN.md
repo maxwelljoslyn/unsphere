@@ -2,7 +2,7 @@
 
 ## What this is
 Private fitness tracking app for two users (Maxwell + Ryan). Django + HTMX.
-"parrot" is a placeholder project name, will be renamed later.
+The app is named "unsphere".
 
 ## Architecture decisions (don't relitigate these)
 
@@ -14,7 +14,7 @@ both inherit from abstract `Exercise`. DB-level constraints enforced per table.
 `CardioExercise` has a `CheckConstraint` requiring at least one of distance or duration.
 `StrengthExercise` requires sets + reps; weight is optional (bodyweight/PT use case).
 
-**Pint for all unit math** — singleton `u = UnitRegistry()` in `src/parrot/units.py`.
+**Pint for all unit math** — singleton `u = UnitRegistry()` in `src/unsphere/units.py`.
 `PintField` (model field) stores quantities as strings in DB.
 `PintFormField` (form field, MultiValueField) renders two inputs: [magnitude, unit text].
 `PintTimeFormField` renders two number inputs: [minutes, seconds], no unit text entry.
@@ -32,16 +32,16 @@ request, stores newly earned keys in `request.session["pending_achievements"]`.
 
 **SQLite** with WAL, busy_timeout=5000, foreign_keys=ON, synchronous=NORMAL,
 cache_size=-64000, temp_store=MEMORY, mmap_size=134217728.
-Configured via `connection_created` signal in `ParrotConfig.ready()`.
+Configured via `connection_created` signal in `UnsphereConfig.ready()`.
 
 ## Key files
 
 | File | Purpose |
 |---|---|
-| `src/parrot/settings.py` | Django config, SQLite, AUTH_USER_MODEL, login redirects |
-| `src/parrot/apps.py` | ParrotConfig — wires SQLite pragmas on connection_created |
-| `src/parrot/units.py` | `u = UnitRegistry()` singleton — import from here everywhere |
-| `src/parrot/urls.py` | Root URLs: admin, accounts/, workouts app |
+| `src/unsphere/settings.py` | Django config, SQLite, AUTH_USER_MODEL, login redirects |
+| `src/unsphere/apps.py` | UnsphereConfig — wires SQLite pragmas on connection_created |
+| `src/unsphere/units.py` | `u = UnitRegistry()` singleton — import from here everywhere |
+| `src/unsphere/urls.py` | Root URLs: admin, accounts/, workouts app |
 | `src/users/models.py` | `User(AbstractUser)` + `email_confirmed` flag |
 | `src/users/forms.py` | RegistrationForm, ConfirmedAuthenticationForm (blocks unconfirmed login) |
 | `src/users/auth_emails.py` | `send_confirmation_email` (token + Mailgun SMTP), `EmailSendError` |
@@ -163,12 +163,10 @@ Workout detail page has `<ul id="exercise-list">` and `<div id="add-exercise-are
       request can clobber an undrained queue.
 - [ ] Templates feature, unlockable. Unlock criteria not yet decided. Implementation:
       hidden <span id="nav-templates-link"> plus a _nav_templates_oob.html appended by whatever unlocks it.
-- [ ] **Scrub "Parrot" from user-facing strings** (do as part of the app rename):
-      email subject (`src/users/auth_emails.py:41`), email body
-      (`templates/registration/confirmation_email.txt:3`), and the `DEFAULT_FROM_EMAIL`
-      fallback default (`src/parrot/settings.py:148`, `no-reply@parrot.local`). The
-      admin fieldset label (`src/users/admin.py:12`) is superuser-only. Package/import
-      paths, the db filename, and host defaults are internal — not user-facing.
+- [x] **Renamed parrot → unsphere throughout**, including the user-facing strings
+      (email subject/body, `DEFAULT_FROM_EMAIL`, admin fieldset label) and the Python
+      package `src/unsphere/`, db filename, Caddy/systemd/deploy config, and subdomain
+      `unsphere.maxwelljoslyn.com`.
 
 
 ## Running the app

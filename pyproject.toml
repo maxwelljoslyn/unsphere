@@ -1,5 +1,5 @@
 [project]
-name = "parrot"
+name = "unsphere"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -18,5 +18,5 @@ dependencies = [
 ]
 
 [tool.pytest.ini_options]
-DJANGO_SETTINGS_MODULE = "parrot.settings"
+DJANGO_SETTINGS_MODULE = "unsphere.settings"
 pythonpath = ["src"]

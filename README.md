@@ -1,7 +1,6 @@
-# parrot
+# unsphere
 
 Private fitness tracking app for two users (Maxwell + Ryan). Django + HTMX.
-"parrot" is a placeholder project name.
 
 ## Setup
 
@@ -42,7 +41,7 @@ EMAIL_PORT=587
 EMAIL_USE_TLS=true
 EMAIL_HOST_USER=postmaster@mg.yourdomain.com
 EMAIL_HOST_PASSWORD=<mailgun smtp password>
-DEFAULT_FROM_EMAIL=Parrot <no-reply@mg.yourdomain.com>
+DEFAULT_FROM_EMAIL=Unsphere <no-reply@mg.yourdomain.com>
 EMAIL_CONFIRMATION_REQUIRED=true
 ```
 

@@ -3,7 +3,7 @@ from django.db import models
 from django.utils.safestring import mark_safe
 from pint import Quantity
 
-from parrot.units import u
+from unsphere.units import u
 
 
 class PintField(models.CharField):

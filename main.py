@@ -1,5 +1,5 @@
 def main():
-    print("Hello from parrot!")
+    print("Hello from unsphere!")
 
 
 if __name__ == "__main__":

@@ -33,10 +33,10 @@ if not SECRET_KEY:
         )
 
 ALLOWED_HOSTS = _env_list(
-    "ALLOWED_HOSTS", "localhost,127.0.0.1,parrot.maxwelljoslyn.com"
+    "ALLOWED_HOSTS", "localhost,127.0.0.1,unsphere.maxwelljoslyn.com"
 )
 CSRF_TRUSTED_ORIGINS = _env_list(
-    "CSRF_TRUSTED_ORIGINS", "https://parrot.maxwelljoslyn.com"
+    "CSRF_TRUSTED_ORIGINS", "https://unsphere.maxwelljoslyn.com"
 )
 
 INSTALLED_APPS = [
@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "parrot.apps.ParrotConfig",
+    "unsphere.apps.UnsphereConfig",
     "users",
     "workouts",
     "achievements",
@@ -63,7 +63,7 @@ MIDDLEWARE = [
     "achievements.middleware.AchievementMiddleware",
 ]
 
-ROOT_URLCONF = "parrot.urls"
+ROOT_URLCONF = "unsphere.urls"
 
 TEMPLATES = [
     {
@@ -83,12 +83,12 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "parrot.wsgi.application"
+WSGI_APPLICATION = "unsphere.wsgi.application"
 
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "parrot.db",
+        "NAME": BASE_DIR / "unsphere.db",
     }
 }
 
@@ -138,7 +138,7 @@ LOGOUT_REDIRECT_URL = "/accounts/login/"
 #   EMAIL_USE_TLS=true
 #   EMAIL_HOST_USER=postmaster@mg.yourdomain.com
 #   EMAIL_HOST_PASSWORD=<mailgun smtp password>
-#   DEFAULT_FROM_EMAIL=Parrot <no-reply@mg.yourdomain.com>
+#   DEFAULT_FROM_EMAIL=Unsphere <no-reply@mg.yourdomain.com>
 EMAIL_BACKEND = os.environ.get(
     "EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend"
 )
@@ -147,7 +147,7 @@ EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "2525"))
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "false").lower() == "true"
-DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "no-reply@parrot.local")
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "no-reply@unsphere.local")
 
 # Require email confirmation before login. Off in dev (DEBUG) so local accounts
 # are usable immediately; on in production.

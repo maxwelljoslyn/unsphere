@@ -1,6 +1,6 @@
 Hello {{ user.username }},
 
-Click the link below to confirm your email address and activate your Parrot account:
+Click the link below to confirm your email address and activate your Unsphere account:
 
 {{ confirm_url }}
 

@@ -3,7 +3,7 @@ from decimal import Decimal
 import pytest
 from django import forms
 
-from parrot.units import u
+from unsphere.units import u
 from workouts.fields import (
     PintFormField,
     PintTimeFormField,

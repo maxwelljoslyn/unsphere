@@ -38,7 +38,7 @@ def send_confirmation_email(user, request):
     )
     try:
         send_mail(
-            subject="Confirm your Parrot account",
+            subject="Confirm your Unsphere account",
             message=body,
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[user.email],

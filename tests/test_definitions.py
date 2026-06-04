@@ -37,7 +37,7 @@ def test_first_cardio_awarded_via_checker(django_user_model):
     workout = Workout.objects.create(
         user=user, date=dt.datetime(2026, 1, 1, 8, 0, tzinfo=dt.timezone.utc)
     )
-    from parrot.units import u
+    from unsphere.units import u
 
     CardioExercise.objects.create(
         workout=workout, movement=movement, distance=u("2 miles")

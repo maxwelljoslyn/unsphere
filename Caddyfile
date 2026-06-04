@@ -38,9 +38,9 @@ zingor.maxwelljoslyn.com {
 	}
 }
 
-parrot.maxwelljoslyn.com {
+unsphere.maxwelljoslyn.com {
 	handle /static/* {
-		root * /home/maxwell/parrot/staticfiles
+		root * /home/maxwell/unsphere/staticfiles
 		uri strip_prefix /static
 		file_server
 	}
