@@ -1,0 +1,517 @@
+/* ===========================================================================
+   Parrot — gentle neo-brutalism
+   ---------------------------------------------------------------------------
+   The brutalist bones: thick ink borders, hard offset shadows (no blur), high
+   contrast, chunky type. The gentle skin: a warm cream paper, soft pastel
+   accents, generously rounded corners, and unhurried spacing. Loud, but kind.
+   =========================================================================== */
+
+:root {
+  /* Paper & ink */
+  --bg:        #FBF4E6;   /* warm cream */
+  --surface:   #FFFDF8;   /* card paper, a hair brighter than bg */
+  --ink:       #2B2722;   /* warm near-black — borders, shadows, body text */
+  --ink-soft:  #6F665E;   /* muted captions, metadata */
+
+  /* Pastel accents (saturated enough to read as brutalist, soft enough to be kind) */
+  --coral:      #FF8A73;
+  --coral-soft: #FBD9CE;
+  --sage:       #86C29A;
+  --sage-soft:  #D6EBDC;
+  --butter:     #FFD45E;
+  --butter-soft:#FCEBB4;
+  --peri:       #9DB0F2;
+  --peri-soft:  #DEE3FB;
+
+  /* Brutalist geometry */
+  --b:        2.5px;            /* standard border weight */
+  --b-thick:  3px;             /* cards */
+  --r:        14px;            /* the "gentle" — rounded, never sharp */
+  --r-sm:     10px;
+  --shadow:     4px 4px 0 var(--ink);
+  --shadow-lg:  6px 6px 0 var(--ink);
+
+  --font-display: "Bricolage Grotesque", "Trebuchet MS", sans-serif;
+  --font-body:    "Hanken Grotesk", "Segoe UI", system-ui, sans-serif;
+}
+
+/* ----------------------------------------------------------------- Reset-ish */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: var(--ink);
+  background-color: var(--bg);
+  /* Faint dotted-grid paper texture: atmosphere without noise. */
+  background-image: radial-gradient(var(--ink) 0.6px, transparent 0.6px);
+  background-size: 22px 22px;
+  background-position: -11px -11px;
+  /* Tame the dots so text stays comfortable. */
+  background-blend-mode: normal;
+}
+body::before {
+  /* A wash that fades the dots toward the paper colour. */
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  opacity: 0.86;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------- Typography */
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.08;
+  color: var(--ink);
+}
+
+h1 {
+  font-size: clamp(2.1rem, 5vw, 3.1rem);
+  margin: 0.2rem 0 1.4rem;
+}
+/* The signature flourish: a stubby coral underline tucked beneath every h1. */
+h1::after {
+  content: "";
+  display: block;
+  width: 3.25rem;
+  height: 0.55rem;
+  margin-top: 0.7rem;
+  background: var(--coral);
+  border-radius: 99px;
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
+h2 {
+  font-size: clamp(1.4rem, 3vw, 1.8rem);
+  margin: 2.2rem 0 1rem;
+}
+h3 { font-size: 1.25rem; margin: 1.4rem 0 0.75rem; }
+
+p { margin: 0.75rem 0; }
+
+a {
+  color: var(--ink);
+  text-decoration-color: var(--coral);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+  font-weight: 600;
+}
+a:hover { text-decoration-color: var(--ink); }
+
+strong { font-weight: 800; }
+
+/* ------------------------------------------------------------------- Layout */
+.container {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 1.25rem 1.25rem 5rem;
+}
+
+/* ---------------------------------------------------------------------- Nav */
+nav {
+  max-width: 60rem;
+  margin: 1.25rem auto 0;
+  padding: 0.7rem 1.1rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.55rem;
+  background: var(--surface);
+  border: var(--b) solid var(--ink);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+nav a {
+  text-decoration: none;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--r-sm);
+  transition: background 0.12s ease, color 0.12s ease;
+}
+nav a:hover { background: var(--butter); }
+/* The literal "|" separators between links — quiet them down. */
+nav { color: var(--peri); }
+nav a, nav button { color: var(--ink); }
+
+/* The nav already reads as a bar; the trailing <hr> is now redundant. */
+nav + hr { display: none; }
+
+/* Other horizontal rules become a chunky dashed seam. */
+hr {
+  border: none;
+  border-top: var(--b) dashed var(--ink);
+  opacity: 0.55;
+  margin: 2rem 0;
+}
+
+/* ------------------------------------------------------------------ Buttons */
+button,
+input[type="submit"] {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--ink);
+  background: var(--butter);
+  border: var(--b) solid var(--ink);
+  border-radius: var(--r-sm);
+  box-shadow: var(--shadow);
+  padding: 0.5rem 0.95rem;
+  cursor: pointer;
+  line-height: 1.2;
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.12s ease;
+}
+button:hover,
+input[type="submit"]:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0 var(--ink);
+}
+/* The satisfying press: the button sinks into its own shadow. */
+button:active,
+input[type="submit"]:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 var(--ink);
+}
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--peri);
+  outline-offset: 2px;
+}
+
+/* The primary "Save" / submit action wears coral. */
+form button[type="submit"],
+form input[type="submit"] { background: var(--coral); }
+
+/* The logout button lives in the nav — keep it small and sage. */
+nav button {
+  background: var(--sage);
+  box-shadow: 2px 2px 0 var(--ink);
+  padding: 0.3rem 0.7rem;
+  font-size: 0.85rem;
+}
+nav button:hover { box-shadow: 3px 3px 0 var(--ink); }
+
+/* ----------------------------------------------------- Form fields & inputs */
+form p { margin: 0 0 1rem; }
+
+label {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 0.3rem;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+input[type="url"],
+input[type="search"],
+input[type="datetime-local"],
+input[type="date"],
+input[type="time"],
+select,
+textarea {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: var(--ink);
+  background: var(--surface);
+  border: var(--b) solid var(--ink);
+  border-radius: var(--r-sm);
+  padding: 0.5rem 0.65rem;
+  width: 100%;
+  max-width: 22rem;
+  display: block;
+  transition: box-shadow 0.12s ease, transform 0.12s ease;
+}
+textarea { max-width: 32rem; min-height: 5rem; }
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  box-shadow: var(--shadow);
+  transform: translate(-1px, -1px);
+}
+::placeholder { color: var(--ink-soft); opacity: 0.7; }
+
+/* Django renders inline help & errors as small text / lists under fields. */
+.helptext, .helptext small, small { color: var(--ink-soft); font-size: 0.85rem; }
+.errorlist {
+  list-style: none;
+  margin: 0.3rem 0;
+  padding: 0.4rem 0.7rem;
+  background: var(--coral-soft);
+  border: 2px solid var(--ink);
+  border-radius: var(--r-sm);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* ----------------------------------------------------------------- Messages */
+.messages {
+  list-style: none;
+  max-width: 60rem;
+  margin: 1rem auto 0;
+  padding: 0 1.25rem;
+  display: grid;
+  gap: 0.6rem;
+}
+.messages li {
+  padding: 0.7rem 1rem;
+  background: var(--peri-soft);
+  border: var(--b) solid var(--ink);
+  border-radius: var(--r-sm);
+  box-shadow: var(--shadow);
+  font-weight: 600;
+}
+.messages li.success { background: var(--sage-soft); }
+.messages li.error   { background: var(--coral-soft); }
+.messages li.warning { background: var(--butter-soft); }
+
+/* ------------------------------------------- Generic content lists as cards */
+/* Workout list, movement list, exercise list: stacked "index card" rows.     */
+.container > ul,
+#exercise-list {
+  list-style: none;
+  padding: 0;
+  margin: 1.25rem 0;
+  display: grid;
+  gap: 0.75rem;
+}
+.container > ul > li,
+#exercise-list > li {
+  background: var(--surface);
+  border: var(--b) solid var(--ink);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  padding: 0.85rem 1.1rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.container > ul > li:hover,
+#exercise-list > li:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-lg);
+}
+/* Row action links/buttons drift to the right edge of their card. */
+.container > ul > li > a:not(:first-child),
+#exercise-list > li button { margin-left: auto; }
+#exercise-list > li button + button { margin-left: 0.4rem; }
+/* Make the main link of a workout row read as the row's title. */
+.container > ul > li > a:first-child {
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* "New …" call-to-action paragraph above each list. */
+.container > p > a[href*="create"],
+.container > p > a[href$="/new/"] {
+  display: inline-block;
+  text-decoration: none;
+  font-family: var(--font-display);
+  font-weight: 700;
+  background: var(--sage);
+  border: var(--b) solid var(--ink);
+  border-radius: var(--r-sm);
+  box-shadow: var(--shadow);
+  padding: 0.45rem 0.9rem;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+.container > p > a[href*="create"]:hover,
+.container > p > a[href$="/new/"]:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0 var(--ink);
+}
+
+/* Add-exercise area on the workout detail page. */
+#add-exercise-area {
+  margin-top: 1.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+/* When it swaps to a form, give it room to breathe as a panel. */
+#add-exercise-area:has(form) {
+  display: block;
+  background: var(--surface);
+  border: var(--b-thick) solid var(--ink);
+  border-radius: var(--r);
+  box-shadow: var(--shadow-lg);
+  padding: 1.25rem;
+}
+#add-exercise-area h3 { margin-top: 0; }
+
+/* =================================================== Achievements as a grid */
+#achievement-list {
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 1.25rem;
+}
+#achievement-list > li {
+  position: relative;
+  min-height: 10.5rem;
+  background: var(--surface);
+  border: var(--b-thick) solid var(--ink);
+  border-radius: var(--r);
+  box-shadow: var(--shadow-lg);
+  padding: 1.3rem 1.2rem 1.1rem;
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
+}
+#achievement-list > li:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 9px 9px 0 var(--ink);
+}
+
+/* Earned cards (the only ones carrying a <strong> name) glow butter-gold. */
+#achievement-list > li:has(strong) {
+  background: var(--butter-soft);
+}
+/* Locked cards stay quiet and papery, with a faint hatch of mystery. */
+#achievement-list > li:not(:has(strong)) {
+  color: var(--ink-soft);
+  background-color: var(--surface);
+  background-image: repeating-linear-gradient(
+    45deg,
+    var(--peri-soft) 0,
+    var(--peri-soft) 10px,
+    transparent 10px,
+    transparent 20px
+  );
+}
+/* Fill the otherwise-empty locked card with a quiet "Locked" title. */
+/*
+#achievement-list > li:not(:has(strong))::before {
+  content: "Locked";
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.15rem;
+  color: var(--ink-soft);
+  letter-spacing: -0.01em;
+}
+*/
+
+/* The trophy / "?" token becomes a circular brutalist stamp in the corner. */
+.achievement-icon {
+  position: absolute;
+  top: 1.1rem;
+  right: 1.1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  font-size: 1.5rem;
+  background: var(--surface);
+  border: var(--b) solid var(--ink);
+  border-radius: 50%;
+  box-shadow: 2px 2px 0 var(--ink);
+}
+#achievement-list > li:has(strong) .achievement-icon { background: var(--butter); }
+#achievement-list > li:not(:has(strong)) .achievement-icon {
+  background: var(--peri-soft);
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: var(--ink-soft);
+}
+
+/* Achievement name reads as the card title, with the description on its own
+   line beneath it. Only the title and description sit alongside the corner
+   trophy stamp, so the right lane is reserved on them rather than on the whole
+   card — that lets the "earned on" date and others-list span the full width. */
+#achievement-list strong,
+.achievement-desc {
+  padding-right: 3.3rem;
+}
+#achievement-list strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.achievement-desc {
+  display: block;
+  margin-top: 0.3rem;
+}
+/* The earned/also-earned sub-blocks: small, muted, set off by a hairline. */
+#achievement-list > li div {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+#achievement-list > li div:has(ul) {
+  margin-top: 0.35rem;
+  padding-top: 0.5rem;
+  border-top: 2px dashed var(--ink);
+}
+#achievement-list ul {
+  list-style: none;
+  margin: 0.35rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.2rem;
+}
+#achievement-list ul li {
+  font-size: 0.82rem;
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  background: none;
+}
+time { font-variant-numeric: tabular-nums; }
+
+/* ------------------------------------------------ Achievement celebration */
+/* (The open/scale keyframes live inline in base.html; this is the chrome.) */
+#achievement-dialog {
+  border: var(--b-thick) solid var(--ink);
+  border-radius: var(--r);
+  box-shadow: 8px 8px 0 var(--ink);
+  background: var(--butter-soft);
+  padding: 1.75rem 2rem;
+  max-width: 26rem;
+  color: var(--ink);
+}
+#achievement-dialog::backdrop {
+  background: rgba(43, 39, 34, 0.35);
+}
+#achievement-dialog h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.5rem;
+}
+#achievement-dialog .trophy { font-size: 1.6rem; }
+#achievement-dialog form { margin-top: 1.25rem; }
+#achievement-dialog button { background: var(--coral); }
+
+/* ----------------------------------------------------------------- Details */
+:where(h1, h2) + p a { font-weight: 700; }
+
+@media (max-width: 30rem) {
+  body { font-size: 1rem; }
+  .container { padding: 1rem 1rem 4rem; }
+  #achievement-list { grid-template-columns: 1fr; }
+}
+
+/* Respect reduced-motion: drop the press/hover travel. */
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}

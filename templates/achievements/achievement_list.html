@@ -7,7 +7,8 @@
   <li>
     {% if item.earned_by_me %}
       <span class="achievement-icon">🏆</span>
-      <strong>{{ item.adef.name }}</strong> — {{ item.adef.description }}
+      <strong>{{ item.adef.name }}</strong>
+      <span class="achievement-desc">{{ item.adef.description }}</span>
       <div>You earned this on
         <time datetime="{{ item.my_earned_at|date:'c' }}" data-localize>{{ item.my_earned_at|date:"M j, Y, H:i" }} UTC</time>.</div>
       {% if item.others %}
