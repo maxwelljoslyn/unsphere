@@ -1,0 +1,59 @@
+mxjn.me {
+	redir https://www.mxjn.me{uri}
+}
+
+www.mxjn.me {
+	# Redirect specific path to GitHub
+	@portfolio_redirect path /portfolio
+	redir @portfolio_redirect https://www.github.com/maxwelljoslyn
+
+	@subportfolio_redirect path /portfolio/*
+	redir @subportfolio_redirect https://www.github.com/maxwelljoslyn{uri}
+
+	# Redirect all other requests to www.maxwelljoslyn.com
+	redir https://www.maxwelljoslyn.com{uri}
+}
+
+maxwelljoslyn.com {
+	redir https://www.maxwelljoslyn.com{uri}
+}
+
+www.maxwelljoslyn.com {
+	reverse_proxy 127.0.0.1:10101
+	encode gzip
+	#	log {
+	#		output file /var/log/caddy/access.log
+	#	}
+}
+
+zingor.maxwelljoslyn.com {
+	handle /static/* {
+		root * /home/maxwell/zingor/staticfiles
+		uri strip_prefix /static
+		file_server
+	}
+
+	handle {
+		reverse_proxy 127.0.0.1:8000
+	}
+}
+
+parrot.maxwelljoslyn.com {
+	handle /static/* {
+		root * /home/maxwell/parrot/staticfiles
+		uri strip_prefix /static
+		file_server
+	}
+
+	handle {
+		reverse_proxy 127.0.0.1:8001
+	}
+}
+
+#wiki.maxwelljoslyn.com {
+#	reverse_proxy localhost:8080/mediawiki{uri}
+#
+#	log {
+#		output file /var/log/caddy/access.log
+#	}
+#}

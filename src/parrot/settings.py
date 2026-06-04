@@ -1,11 +1,43 @@
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-SECRET_KEY = os.environ.get("SECRET_KEY", "dev-only-insecure-key-change-before-deploy")
-DEBUG = True
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+# Load secrets/config from a project-dir .env (chmod 700, gitignored), matching
+# the zingor deployment. Absent in dev, so the in-file defaults apply there.
+load_dotenv(BASE_DIR / ".env")
+
+
+def _env_bool(name, default):
+    return os.environ.get(name, str(default)).lower() in ("1", "true", "yes", "on")
+
+
+def _env_list(name, default):
+    raw = os.environ.get(name, default)
+    return [item.strip() for item in raw.split(",") if item.strip()]
+
+
+DEBUG = _env_bool("DEBUG", True)
+
+# In production the SECRET_KEY must come from the environment. The insecure
+# fallback is only tolerated while DEBUG is on.
+SECRET_KEY = os.environ.get("SECRET_KEY", "")
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = "dev-only-insecure-key-change-before-deploy"
+    else:
+        raise RuntimeError(
+            "SECRET_KEY must be set in the environment when DEBUG is off"
+        )
+
+ALLOWED_HOSTS = _env_list(
+    "ALLOWED_HOSTS", "localhost,127.0.0.1,parrot.maxwelljoslyn.com"
+)
+CSRF_TRUSTED_ORIGINS = _env_list(
+    "CSRF_TRUSTED_ORIGINS", "https://parrot.maxwelljoslyn.com"
+)
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -78,7 +110,21 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+# collectstatic writes here; Caddy serves /static/* directly from this dir.
+STATIC_ROOT = BASE_DIR / "staticfiles"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Production hardening. These only bite when DEBUG is off; in dev they stay
+# relaxed so http://localhost keeps working.
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT = _env_bool("SECURE_SSL_REDIRECT", True)
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = int(os.environ.get("SECURE_HSTS_SECONDS", "2592000"))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
 
 LOGIN_URL = "/accounts/login/"
 LOGIN_REDIRECT_URL = "/workouts/"

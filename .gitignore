@@ -11,3 +11,9 @@ wheels/
 
 # Database
 *.db
+
+# Secrets / local config (lives in the project dir, loaded by settings.py)
+.env
+
+# collectstatic output
+/staticfiles/

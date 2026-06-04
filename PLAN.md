@@ -112,6 +112,11 @@ Workout detail page has `<ul id="exercise-list">` and `<div id="add-exercise-are
       users earned one you haven't, their usernames + earn times show anyway
       (competition). If you've earned it: 🏆 + name + description + your earn time,
       plus any other earners. Nav link added to `base.html`.
+      **Sort order** = definition order in `definitions.py`. The view iterates
+      `registry.items()` and `registry` is a plain dict, so list order is just the
+      order the `AchievementDef(...)` calls run at import. No explicit sort anywhere.
+      `AchievementDef` has an unused `category` field; if a deliberate, source-position-
+      independent ordering is ever wanted, add an explicit sort key there.
 
 ### Missing CRUD
 - [x] Edit and delete for Workout (full-page forms + confirm page)
@@ -158,6 +163,12 @@ Workout detail page has `<ul id="exercise-list">` and `<div id="add-exercise-are
       request can clobber an undrained queue.
 - [ ] Templates feature, unlockable. Unlock criteria not yet decided. Implementation:
       hidden <span id="nav-templates-link"> plus a _nav_templates_oob.html appended by whatever unlocks it.
+- [ ] **Scrub "Parrot" from user-facing strings** (do as part of the app rename):
+      email subject (`src/users/auth_emails.py:41`), email body
+      (`templates/registration/confirmation_email.txt:3`), and the `DEFAULT_FROM_EMAIL`
+      fallback default (`src/parrot/settings.py:148`, `no-reply@parrot.local`). The
+      admin fieldset label (`src/users/admin.py:12`) is superuser-only. Package/import
+      paths, the db filename, and host defaults are internal — not user-facing.
 
 
 ## Running the app
