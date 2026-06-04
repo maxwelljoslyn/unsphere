@@ -1,0 +1,8 @@
+{% comment %}
+Out-of-band swap appended by AchievementMiddleware to htmx responses. It refills
+#achievement-queue with the freshly earned achievements; the client then drains
+the queue, showing one dialog at a time and reopening for the next on dismiss.
+(The dialog is modal while open, so no further htmx request can land — and thus
+clobber an undrained queue — until the user has dismissed everything.)
+{% endcomment %}
+<div id="achievement-queue" hx-swap-oob="innerHTML">{% include "achievements/_celebration_queue.html" %}</div>

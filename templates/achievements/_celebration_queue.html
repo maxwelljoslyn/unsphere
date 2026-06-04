@@ -1,0 +1,7 @@
+{% comment %}
+A run of newly earned achievements, each wrapped in an inert <template> so the
+client can reveal them one dialog at a time (dismiss one → the next appears).
+Used inline on full-page loads and as the payload of the htmx out-of-band swap.
+{% endcomment %}
+{% for a in achievements %}<template class="achievement-card">{% include "achievements/_celebration_content.html" with achievement=a %}</template>
+{% endfor %}

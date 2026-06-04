@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Resend confirmation{% endblock %}
+{% block content %}
+<h1>Resend confirmation email</h1>
+<p>Enter your username and we'll send a fresh confirmation link to the email on
+your account.</p>
+<form method="post">
+  {% csrf_token %}
+  <p>
+    <label for="id_username">Username</label>
+    <input type="text" name="username" id="id_username" required autofocus>
+  </p>
+  <button type="submit">Send confirmation email</button>
+</form>
+<p><a href="{% url 'login' %}">Back to log in</a></p>
+{% endblock %}

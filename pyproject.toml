@@ -1,0 +1,20 @@
+[project]
+name = "parrot"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "attrs>=26.1.0",
+    "django>=5.2.15",
+    "pint>=0.24",
+    "pytest>=9.0.3",
+    "pytest-django>=4.9.0",
+    "pytest-xdist>=3.8.0",
+    "ruff>=0.15.15",
+    "tzdata>=2025.1",
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "parrot.settings"
+pythonpath = ["src"]

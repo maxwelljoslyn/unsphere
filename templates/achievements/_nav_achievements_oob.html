@@ -1,0 +1,6 @@
+{% comment %}
+Out-of-band swap appended by AchievementMiddleware when the user earns their
+first-ever achievement on an htmx interaction. htmx fills #nav-achievements-link
+in place, revealing the link without a page reload.
+{% endcomment %}
+<span id="nav-achievements-link" hx-swap-oob="innerHTML">{% include "achievements/_nav_achievements_link.html" %}</span>

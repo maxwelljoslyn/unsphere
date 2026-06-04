@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Check your email{% endblock %}
+{% block content %}
+<h1>Check your email</h1>
+<p>We sent a confirmation link to your email address. Click it to activate your
+account, then you'll be able to log in.</p>
+<p>Didn't get it? <a href="{% url 'resend-confirmation' %}">Resend the confirmation email</a></p>
+<p><a href="{% url 'login' %}">Back to log in</a></p>
+{% endblock %}

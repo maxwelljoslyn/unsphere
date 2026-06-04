@@ -1,0 +1,12 @@
+<li id="strength-exercise-{{ ex.pk }}">
+  {% if form.non_field_errors %}
+    <ul>{% for e in form.non_field_errors %}<li>{{ e }}</li>{% endfor %}</ul>
+  {% endif %}
+  <form hx-post="{% url 'strength-exercise-edit' ex.pk %}"
+        hx-target="#strength-exercise-{{ ex.pk }}"
+        hx-swap="outerHTML">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Save</button>
+  </form>
+</li>

@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}Fitness Tracker{% endblock %}</title>
+  <style>
+    /* Achievement celebration. The dialog scales+fades in quickly; the trophy
+       grows to 2x over the first second, then eases back to its original size
+       over the next three seconds (single 4s run). */
+    #achievement-dialog[open] {
+      animation: achievement-dialog-in 200ms ease-out;
+    }
+    @keyframes achievement-dialog-in {
+      from { opacity: 0; transform: scale(0.9); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    #achievement-dialog .trophy {
+      display: inline-block;
+      transform-origin: center;
+      animation: achievement-trophy-pop 4s ease-in-out both;
+    }
+    @keyframes achievement-trophy-pop {
+      0%   { transform: scale(1); }
+      25%  { transform: scale(2); }   /* 1s in: grown to 2x */
+      100% { transform: scale(1); }   /* next 3s: back to original */
+    }
+  </style>
+  <script src="https://unpkg.com/htmx.org@2.0.4/dist/htmx.min.js"></script>
+  <script>
+    // Render times in the visitor's local timezone, entirely client-side.
+    // The server emits each timestamp as UTC ISO 8601 in <time data-localize
+    // datetime="..."> with a UTC fallback as text; here we rewrite that text to
+    // the browser's local zone. The browser is the authoritative source of its
+    // own zone, and Date/Intl apply DST automatically — so this needs no
+    // cookie, no server state, and works even when cookies are blocked.
+    (function () {
+      function localizeTimes(root) {
+        var nodes = (root || document).querySelectorAll("time[data-localize]");
+        Array.prototype.forEach.call(nodes, function (el) {
+          var iso = el.getAttribute("datetime");
+          if (!iso) return;
+          var d = new Date(iso);
+          if (isNaN(d.getTime())) return;
+          el.textContent = d.toLocaleString(undefined, {
+            year: "numeric", month: "short", day: "numeric",
+            hour: "2-digit", minute: "2-digit", hour12: false
+          });
+          el.removeAttribute("data-localize");  // don't reprocess on later swaps
+        });
+      }
+      document.addEventListener("DOMContentLoaded", function () { localizeTimes(document); });
+      // htmx swaps in new markup; localize anything it brings.
+      document.addEventListener("htmx:afterSwap", function (e) { localizeTimes(e.target); });
+    })();
+  </script>
+</head>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+{% if user.is_authenticated %}
+<nav>
+  <a href="{% url 'workout-list' %}">Workouts</a> |
+  <a href="{% url 'movement-list' %}">Movements</a><span id="nav-achievements-link">{% if has_achievements %}{% include "achievements/_nav_achievements_link.html" %}{% endif %}</span> |
+  <form method="post" action="{% url 'logout' %}" style="display:inline">
+    {% csrf_token %}
+    <button type="submit">Log out ({{ user.username }})</button>
+  </form>
+</nav>
+<hr>
+{% else %}
+<nav>
+  <a href="{% url 'login' %}">Log in</a> |
+  <a href="{% url 'register' %}">Register</a>
+</nav>
+<hr>
+{% endif %}
+{% if messages %}
+<ul class="messages">
+  {% for message in messages %}
+  <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+  {% endfor %}
+</ul>
+{% endif %}
+<dialog id="achievement-dialog">
+  <div id="achievement-dialog-content"></div>
+  <form method="dialog"><button autofocus>Nice!</button></form>
+</dialog>
+{# Inert holder: one <template> per freshly earned achievement. The client below #}
+{# drains it, showing a separate dialog for each, one after another. #}
+<div id="achievement-queue" hidden>{% if pending_achievements %}{% include "achievements/_celebration_queue.html" with achievements=pending_achievements %}{% endif %}</div>
+<script>
+  (function () {
+    var dialog = document.getElementById("achievement-dialog");
+    if (!dialog) return;
+    var content = document.getElementById("achievement-dialog-content");
+    var queue = document.getElementById("achievement-queue");
+    // Pause between dialogs so one visibly closes before the next opens (and the
+    // scale-in animation replays), giving the "disappears, then reappears" feel.
+    var REOPEN_DELAY_MS = 200;
+
+    // Move the next queued achievement into the dialog and open it. Each card is
+    // an inert <template>; we consume it so it can't replay.
+    function showNext() {
+      if (!queue) return;
+      var card = queue.querySelector("template");
+      if (!card) return;                 // queue drained
+      content.innerHTML = card.innerHTML;
+      card.remove();
+      if (!dialog.open) dialog.showModal();
+    }
+
+    // First reveal: full-page load carrying earned achievements (e.g. after a
+    // redirect), and htmx interactions that refill the queue out-of-band
+    // (afterSettle fires once that swap is in the DOM).
+    showNext();
+    document.body.addEventListener("htmx:afterSettle", showNext);
+
+    // On dismiss, clear the dialog; if more are queued, reopen for the next one
+    // after a short, visible gap.
+    dialog.addEventListener("close", function () {
+      content.innerHTML = "";
+      if (queue && queue.querySelector("template")) {
+        setTimeout(showNext, REOPEN_DELAY_MS);
+      }
+    });
+  })();
+</script>
+{% block content %}{% endblock %}
+</body>
+</html>

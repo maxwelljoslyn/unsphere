@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{% include "workouts/_workout_datetime.html" %}{% endblock %}
+{% block content %}
+<h1>{% include "workouts/_workout_datetime.html" %}</h1>
+{% if workout.notes %}<p>{{ workout.notes }}</p>{% endif %}
+<p>
+  <a href="{% url 'workout-list' %}">← Back</a> |
+  <a href="{% url 'workout-edit' workout.pk %}">Edit</a> |
+  <a href="{% url 'workout-delete' workout.pk %}">Delete</a>
+</p>
+
+<h2>Exercises</h2>
+<ul id="exercise-list">
+  {% for ex in cardio_exercises %}{% include "workouts/_cardio_exercise.html" %}{% endfor %}
+  {% for ex in strength_exercises %}{% include "workouts/_strength_exercise.html" %}{% endfor %}
+</ul>
+
+<div id="add-exercise-area">
+  <button hx-get="{% url 'cardio-exercise-add' workout.pk %}"
+          hx-target="#add-exercise-area"
+          hx-swap="outerHTML">Add Cardio Exercise</button>
+  <button hx-get="{% url 'strength-exercise-add' workout.pk %}"
+          hx-target="#add-exercise-area"
+          hx-swap="outerHTML">Add Strength Exercise</button>
+</div>
+{% endblock %}

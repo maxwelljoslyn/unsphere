@@ -1,0 +1,13 @@
+<div id="add-exercise-area">
+  <button hx-get="{% url 'cardio-exercise-add' workout.pk %}"
+          hx-target="#add-exercise-area"
+          hx-swap="outerHTML">Add Cardio Exercise</button>
+  <button hx-get="{% url 'strength-exercise-add' workout.pk %}"
+          hx-target="#add-exercise-area"
+          hx-swap="outerHTML">Add Strength Exercise</button>
+</div>
+{% if ex_type == "cardio" %}
+<li hx-swap-oob="beforeend:#exercise-list">{% include "workouts/_cardio_exercise.html" %}</li>
+{% else %}
+<li hx-swap-oob="beforeend:#exercise-list">{% include "workouts/_strength_exercise.html" %}</li>
+{% endif %}

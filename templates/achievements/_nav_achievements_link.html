@@ -1,0 +1,5 @@
+{% comment %}
+The Achievements nav entry, including the leading "|" separator. Rendered inside
+#nav-achievements-link — inline on full pages (when the user has any
+achievements) and as an htmx out-of-band swap the moment they earn their first.
+{% endcomment %} | <a href="{% url 'achievement-list' %}">Achievements</a>

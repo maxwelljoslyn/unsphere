@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Movements{% endblock %}
+{% block content %}
+<h1>Movements</h1>
+<p><a href="{% url 'movement-create' %}">New Movement</a></p>
+<ul>
+{% for movement in movements %}
+  <li>{{ movement.name }} ({{ movement.get_kind_display }})
+    <a href="{% url 'movement-edit' movement.pk %}">Edit</a>
+    <a href="{% url 'movement-delete' movement.pk %}">Delete</a>
+  </li>
+{% empty %}
+  <li>No movements yet.</li>
+{% endfor %}
+</ul>
+{% endblock %}

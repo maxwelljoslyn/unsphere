@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Invalid link{% endblock %}
+{% block content %}
+<h1>Invalid or expired link</h1>
+<p>This confirmation link is invalid or has expired.</p>
+<p>You can <a href="{% url 'resend-confirmation' %}">request a new confirmation email</a>.</p>
+{% endblock %}

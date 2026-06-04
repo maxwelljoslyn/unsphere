@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Achievements{% endblock %}
+{% block content %}
+<h1>Achievements</h1>
+<ul id="achievement-list">
+{% for item in items %}
+  <li>
+    {% if item.earned_by_me %}
+      <span class="achievement-icon">🏆</span>
+      <strong>{{ item.adef.name }}</strong> — {{ item.adef.description }}
+      <div>You earned this on
+        <time datetime="{{ item.my_earned_at|date:'c' }}" data-localize>{{ item.my_earned_at|date:"M j, Y, H:i" }} UTC</time>.</div>
+      {% if item.others %}
+        <div>Also earned by:
+          <ul>
+          {% for row in item.others %}
+            <li>{{ row.user.username }} on
+              <time datetime="{{ row.earned_at|date:'c' }}" data-localize>{{ row.earned_at|date:"M j, Y, H:i" }} UTC</time></li>
+          {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+    {% else %}
+      <span class="achievement-icon">?</span>
+      {% if item.others %}
+        <div>Earned by:
+          <ul>
+          {% for row in item.others %}
+            <li>{{ row.user.username }} on
+              <time datetime="{{ row.earned_at|date:'c' }}" data-localize>{{ row.earned_at|date:"M j, Y, H:i" }} UTC</time></li>
+          {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+    {% endif %}
+  </li>
+{% endfor %}
+</ul>
+{% endblock %}
+{# Locked achievements show only "?" — name/description are hidden until the
+   current user earns them. Other users' earn times are still shown to compete. #}

@@ -1,0 +1,7 @@
+{% comment %}
+Dialog body for a SINGLE achievement. The client shows one of these at a time,
+stepping through #achievement-queue (one dialog per achievement). The trophy
+lives here (not in the dialog shell) so an empty/closed dialog has no 🏆.
+{% endcomment %}
+<h2><span class="trophy">🏆</span> Achievement unlocked!</h2>
+<p><strong>{{ achievement.name }}</strong> — {{ achievement.description }}</p>
