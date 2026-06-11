@@ -9,14 +9,18 @@ dependencies = [
     "django>=5.2.15",
     "gunicorn>=26.0.0",
     "pint>=0.24",
-    "pytest>=9.0.3",
-    "pytest-django>=4.9.0",
-    "pytest-xdist>=3.8.0",
     "python-dotenv>=1.2.2",
-    "ruff>=0.15.15",
     "tzdata>=2025.1",
 ]
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "unsphere.settings"
 pythonpath = ["src"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+    "pytest-django>=4.12.0",
+    "pytest-xdist>=3.8.0",
+    "ruff>=0.15.15",
+]

@@ -284,12 +284,16 @@ dependencies = [
     { name = "django", version = "6.0.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "gunicorn" },
     { name = "pint" },
+    { name = "python-dotenv" },
+    { name = "tzdata" },
+]
+
+[package.dev-dependencies]
+dev = [
     { name = "pytest" },
     { name = "pytest-django" },
     { name = "pytest-xdist" },
-    { name = "python-dotenv" },
     { name = "ruff" },
-    { name = "tzdata" },
 ]
 
 [package.metadata]
@@ -298,10 +302,14 @@ requires-dist = [
     { name = "django", specifier = ">=5.2.15" },
     { name = "gunicorn", specifier = ">=26.0.0" },
     { name = "pint", specifier = ">=0.24" },
-    { name = "pytest", specifier = ">=9.0.3" },
-    { name = "pytest-django", specifier = ">=4.9.0" },
-    { name = "pytest-xdist", specifier = ">=3.8.0" },
     { name = "python-dotenv", specifier = ">=1.2.2" },
-    { name = "ruff", specifier = ">=0.15.15" },
     { name = "tzdata", specifier = ">=2025.1" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "pytest", specifier = ">=9.0.3" },
+    { name = "pytest-django", specifier = ">=4.12.0" },
+    { name = "pytest-xdist", specifier = ">=3.8.0" },
+    { name = "ruff", specifier = ">=0.15.15" },
 ]
