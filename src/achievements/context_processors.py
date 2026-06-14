@@ -1,18 +1,20 @@
-"""Surfaces newly earned achievements to templates.
+"""Surfaces earned-but-unacknowledged achievements to templates.
 
-The middleware stashes earned keys in request.session["pending_achievements"].
-This context processor resolves those keys to their AchievementDefs and clears
-the session key so each achievement is celebrated exactly once.
+The durable source of truth is the DB: an Achievement with acknowledged_at=NULL
+has not yet been dismissed by the user. This context processor resolves those to
+their AchievementDefs for the queue that base.html renders. It does NOT clear
+anything — acknowledgment happens client-side via the acknowledge endpoint when
+the user clicks "Nice!", so a render that the user never sees can't lose the
+celebration.
 
-It only consumes the pending list on full-page (non-HTMX) responses. HTMX
-partials don't extend base.html, so popping there would silently discard
-achievements the user never gets to see; instead we leave them for the next
-full page load.
+It runs only on full-page (non-HTMX) responses. HTMX partials don't extend
+base.html, so there's no queue to fill there; the middleware injects an
+out-of-band swap on those instead.
 """
 
 from __future__ import annotations
 
-from .achievements import registry
+from .middleware import unacknowledged_achievements
 from .models import Achievement
 
 
@@ -32,9 +34,10 @@ def nav_achievements(request):
 def pending_achievements(request):
     if request.headers.get("HX-Request"):
         return {}
-    keys = request.session.pop("pending_achievements", None)
-    if not keys:
+    user = getattr(request, "user", None)
+    if user is None or not user.is_authenticated:
         return {}
-    request.session.modified = True
-    defs = [registry[k] for k in keys if k in registry]
+    defs = unacknowledged_achievements(user)
+    if not defs:
+        return {}
     return {"pending_achievements": defs}

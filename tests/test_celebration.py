@@ -4,6 +4,7 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 
+from achievements.models import Achievement
 from workouts.models import Movement, Workout
 
 User = get_user_model()
@@ -54,26 +55,37 @@ def test_htmx_earn_injects_oob_celebration_and_trigger(auth_client, user):
     assert body.count("🏆") == n_cards
     assert "Getting Started" in body  # one_workout
     assert "On the Move" in body  # first_cardio
-    # Consumed so it won't replay.
-    assert auth_client.session.get("pending_achievements", []) == []
+    # Nothing is consumed server-side: the earned rows stay unacknowledged in the
+    # DB and are redelivered until the client confirms dismissal via the ack
+    # endpoint, so a delivery the user never sees can't lose the celebration.
+    assert (
+        Achievement.objects.filter(user=user, acknowledged_at__isnull=True).count()
+        == n_cards
+    )
 
 
 @pytest.mark.django_db
-def test_non_htmx_redirect_defers_then_full_page_shows(auth_client):
-    # A full-page create redirects; the achievement can't ride a 302, so it's
-    # stashed for the next render.
+def test_non_htmx_redirect_defers_then_full_page_shows(auth_client, user):
+    # A full-page create redirects; the achievement can't ride a 302, so the
+    # earned row simply waits, unacknowledged, in the DB.
     resp = auth_client.post(
         reverse("workout-create"),
         {"date": "2026-02-02T18:30", "timezone": "UTC", "notes": ""},
     )
     assert resp.status_code == 302
-    assert "one_workout" in auth_client.session.get("pending_achievements", [])
+    assert Achievement.objects.filter(
+        user=user, achievement_key="one_workout", acknowledged_at__isnull=True
+    ).exists()
 
-    # The redirected-to page renders the populated dialog and clears the queue.
+    # The redirected-to page renders the populated dialog from that DB row.
     body = auth_client.get(resp.url).content.decode()
     assert "🏆" in body
     assert "Getting Started" in body
-    assert auth_client.session.get("pending_achievements", []) == []
+    # Still unacknowledged after rendering: acknowledgment is client-side via the
+    # ack endpoint, so a render the user might never see can't lose it.
+    assert Achievement.objects.filter(
+        user=user, achievement_key="one_workout", acknowledged_at__isnull=True
+    ).exists()
 
 
 @pytest.mark.django_db
@@ -83,3 +95,81 @@ def test_empty_dialog_has_no_trophy(auth_client):
     body = auth_client.get(reverse("movement-list")).content.decode()
     assert 'id="achievement-dialog"' in body  # shell present for htmx target
     assert "🏆" not in body  # but empty
+
+
+@pytest.mark.django_db
+def test_unacknowledged_redelivered_on_every_full_page_until_acked(auth_client, user):
+    # An earned-but-unacknowledged row is surfaced on every full-page render, so
+    # a celebration whose dismissal never reached the server isn't lost.
+    Achievement.objects.create(user=user, achievement_key="one_workout")
+
+    for _ in range(2):
+        body = auth_client.get(reverse("movement-list")).content.decode()
+        assert "Getting Started" in body  # redelivered each time
+
+    # Once acknowledged, it stops appearing.
+    Achievement.objects.filter(user=user).update(
+        acknowledged_at=dt.datetime(2026, 1, 1, tzinfo=dt.timezone.utc)
+    )
+    body = auth_client.get(reverse("movement-list")).content.decode()
+    assert "Getting Started" not in body
+
+
+@pytest.mark.django_db
+def test_acknowledge_endpoint_marks_row_and_stops_redelivery(auth_client, user):
+    Achievement.objects.create(user=user, achievement_key="one_workout")
+
+    resp = auth_client.post(reverse("achievement-ack"), {"key": "one_workout"})
+    assert resp.status_code == 204
+
+    row = Achievement.objects.get(user=user, achievement_key="one_workout")
+    assert row.acknowledged_at is not None
+
+    body = auth_client.get(reverse("movement-list")).content.decode()
+    assert "Getting Started" not in body  # no longer redelivered
+
+
+@pytest.mark.django_db
+def test_acknowledge_is_idempotent_and_keeps_first_timestamp(auth_client, user):
+    # A retried ack (the client re-fires until the server confirms) must not move
+    # the recorded acknowledgment time.
+    Achievement.objects.create(user=user, achievement_key="one_workout")
+
+    auth_client.post(reverse("achievement-ack"), {"key": "one_workout"})
+    first = Achievement.objects.get(
+        user=user, achievement_key="one_workout"
+    ).acknowledged_at
+
+    resp = auth_client.post(reverse("achievement-ack"), {"key": "one_workout"})
+    assert resp.status_code == 204
+    assert (
+        Achievement.objects.get(
+            user=user, achievement_key="one_workout"
+        ).acknowledged_at
+        == first
+    )
+
+
+@pytest.mark.django_db
+def test_acknowledge_only_touches_callers_own_rows(auth_client, user):
+    bob = User.objects.create_user(username="bob", password="pw")
+    Achievement.objects.create(user=bob, achievement_key="one_workout")
+
+    resp = auth_client.post(reverse("achievement-ack"), {"key": "one_workout"})
+    assert resp.status_code == 204
+
+    # Bob's row is untouched even though the key matches.
+    assert Achievement.objects.get(user=bob).acknowledged_at is None
+
+
+@pytest.mark.django_db
+def test_acknowledge_requires_login(client):
+    resp = client.post(reverse("achievement-ack"), {"key": "one_workout"})
+    assert resp.status_code == 302
+    assert "/accounts/login/" in resp.url
+
+
+@pytest.mark.django_db
+def test_acknowledge_rejects_get(auth_client):
+    resp = auth_client.get(reverse("achievement-ack"))
+    assert resp.status_code == 405

@@ -1,5 +1,8 @@
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
 from django.shortcuts import render
+from django.utils import timezone
+from django.views.decorators.http import require_POST
 
 from .achievements import registry
 from .models import Achievement
@@ -33,3 +36,23 @@ def achievement_list(request):
         )
 
     return render(request, "achievements/achievement_list.html", {"items": items})
+
+
+@login_required
+@require_POST
+def acknowledge(request):
+    """Mark the given achievement(s) as acknowledged for the current user.
+
+    The client POSTs the key(s) of celebrations the user has dismissed. Marking
+    them acknowledged stops them from being redelivered. Only the caller's own
+    unacknowledged rows are touched; unknown or already-acknowledged keys are a
+    harmless no-op, so a retry is always safe.
+    """
+    keys = request.POST.getlist("key")
+    if keys:
+        Achievement.objects.filter(
+            user=request.user,
+            achievement_key__in=keys,
+            acknowledged_at__isnull=True,
+        ).update(acknowledged_at=timezone.now())
+    return HttpResponse(status=204)

@@ -100,16 +100,62 @@
     // Pause between dialogs so one visibly closes before the next opens (and the
     // scale-in animation replays), giving the "disappears, then reappears" feel.
     var REOPEN_DELAY_MS = 200;
+    var ACK_URL = "{% url 'achievement-ack' %}";
+    var CSRF = "{{ csrf_token }}";
+    var STORAGE_KEY = "unsphere:pendingAcks";
 
-    // Move the next queued achievement into the dialog and open it. Each card is
-    // an inert <template>; we consume it so it can't replay.
+    // Keys the user has dismissed but whose acknowledgment hasn't been confirmed
+    // by the server yet. Persisted to localStorage so a reload mid-flight (or
+    // after a failed ack) still suppresses re-celebration; the server keeps
+    // resending until it records the ack, and we keep retrying below.
+    var pendingAcks = loadPending();
+
+    function loadPending() {
+      try {
+        return new Set(JSON.parse(localStorage.getItem(STORAGE_KEY)) || []);
+      } catch (e) {
+        return new Set();
+      }
+    }
+    function savePending() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.prototype.slice.call(pendingAcks)));
+      } catch (e) { /* storage unavailable (e.g. private mode); soldier on */ }
+    }
+
+    // Tell the server this key was dismissed. On success drop it from the
+    // pending set; on failure keep it so the next render's retry tries again.
+    function ack(key) {
+      var body = new URLSearchParams();
+      body.append("key", key);
+      fetch(ACK_URL, {
+        method: "POST",
+        headers: { "X-CSRFToken": CSRF },
+        body: body,
+        credentials: "same-origin"
+      }).then(function (r) {
+        if (r.ok) { pendingAcks.delete(key); savePending(); }
+      }).catch(function () { /* leave it pending; retried later */ });
+    }
+
+    var currentKey = null;
+
+    // Move the next not-yet-dismissed achievement into the dialog and open it.
+    // Each card is an inert <template>; we consume it so it can't replay. Cards
+    // already in pendingAcks (dismissed, server not yet caught up) are dropped
+    // without showing — but we re-fire their ack to help the server converge.
     function showNext() {
       if (!queue) return;
-      var card = queue.querySelector("template");
-      if (!card) return;                 // queue drained
-      content.innerHTML = card.innerHTML;
-      card.remove();
-      if (!dialog.open) dialog.showModal();
+      var card;
+      while ((card = queue.querySelector("template"))) {
+        var key = card.getAttribute("data-key");
+        card.remove();
+        if (key && pendingAcks.has(key)) { ack(key); continue; }
+        content.innerHTML = card.innerHTML;
+        currentKey = key;
+        if (!dialog.open) dialog.showModal();
+        return;
+      }
     }
 
     // First reveal: full-page load carrying earned achievements (e.g. after a
@@ -118,10 +164,18 @@
     showNext();
     document.body.addEventListener("htmx:afterSettle", showNext);
 
-    // On dismiss, clear the dialog; if more are queued, reopen for the next one
-    // after a short, visible gap.
+    // On dismiss (the "Nice!" button or Esc both fire "close"), record the
+    // acknowledgment optimistically and report it; if more are queued, reopen
+    // for the next one after a short, visible gap.
     dialog.addEventListener("close", function () {
       content.innerHTML = "";
+      if (currentKey) {
+        var dismissed = currentKey;
+        currentKey = null;
+        pendingAcks.add(dismissed);
+        savePending();
+        ack(dismissed);
+      }
       if (queue && queue.querySelector("template")) {
         setTimeout(showNext, REOPEN_DELAY_MS);
       }

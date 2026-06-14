@@ -8,6 +8,10 @@ class Achievement(models.Model):
     )
     achievement_key = models.CharField(max_length=100)
     earned_at = models.DateTimeField(auto_now_add=True)
+    # Set when the user dismisses the celebration ("Nice!"). NULL means earned
+    # but not yet acknowledged: the celebration is (re)delivered on each render
+    # until acknowledged, so a single missed delivery can't lose it forever.
+    acknowledged_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         unique_together = [("user", "achievement_key")]

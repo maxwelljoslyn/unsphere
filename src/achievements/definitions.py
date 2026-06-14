@@ -45,10 +45,45 @@ AchievementDef(
 )
 
 AchievementDef(
+    key="three_workouts",
+    name="Warming Up",
+    description="You've logged 3 workouts.",
+    threshold=lambda user: _workout_count(user) >= 3,
+)
+
+AchievementDef(
+    key="six_workouts",
+    name="Hooked",
+    description="You've logged 6 workouts.",
+    threshold=lambda user: _workout_count(user) >= 6,
+)
+
+AchievementDef(
     key="ten_workouts",
     name="Regular",
     description="You've logged 10 workouts.",
     threshold=lambda user: _workout_count(user) >= 10,
+)
+
+AchievementDef(
+    key="fifteen_workouts",
+    name="In the Groove",
+    description="You've logged 15 workouts.",
+    threshold=lambda user: _workout_count(user) >= 15,
+)
+
+AchievementDef(
+    key="twenty_workouts",
+    name="Dedicated",
+    description="You've logged 20 workouts.",
+    threshold=lambda user: _workout_count(user) >= 20,
+)
+
+AchievementDef(
+    key="twenty_five_workouts",
+    name="Quarter Hundred",
+    description="You've logged 25 workouts!",
+    threshold=lambda user: _workout_count(user) >= 25,
 )
 
 AchievementDef(
@@ -77,4 +112,18 @@ AchievementDef(
     name="Metachievement",
     description="You earned an achievement. That's worth an achievement.",
     threshold=lambda user: _achievement_count(user) >= 1,
+)
+
+AchievementDef(
+    key="pentachievement",
+    name="Pentachievement",
+    description="You've earned five achievements.",
+    threshold=lambda user: _achievement_count(user) >= 5,
+)
+
+AchievementDef(
+    key="megachievement",
+    name="Megachievement",
+    description="You've earned ten achievements!",
+    threshold=lambda user: _achievement_count(user) >= 10,
 )

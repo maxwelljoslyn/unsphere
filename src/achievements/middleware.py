@@ -30,6 +30,27 @@ def check_achievements(
     return new_ones
 
 
+def unacknowledged_achievements(
+    user, reg: Dict[str, AchievementDef] | None = None
+) -> list[AchievementDef]:
+    """Defs for the user's earned-but-not-yet-acknowledged achievements.
+
+    This — not the session — is the delivery queue: every render (re)surfaces
+    these until the client confirms the dismissal via the acknowledge endpoint,
+    so a dropped celebration is shown again rather than lost. Ordered by earn
+    time so the client shows them in the order they were unlocked.
+    """
+    if reg is None:
+        reg = global_registry
+
+    keys = (
+        Achievement.objects.filter(user=user, acknowledged_at__isnull=True)
+        .order_by("earned_at", "id")
+        .values_list("achievement_key", flat=True)
+    )
+    return [reg[k] for k in keys if k in reg]
+
+
 def _is_injectable_html(response) -> bool:
     """Only HTML 200s with a body can carry an out-of-band celebration."""
     if getattr(response, "streaming", False):
@@ -51,35 +72,33 @@ class AchievementMiddleware:
             return response
 
         new_ones = check_achievements(request.user)
-        pending_keys = list(request.session.get("pending_achievements", []))
-        pending_keys += [a.key for a in new_ones]
-        if not pending_keys:
+
+        # Only htmx HTML responses can carry an out-of-band swap. Everything else
+        # (redirects, the JSON-less full page) leaves the earned rows
+        # unacknowledged in the DB; the context processor surfaces them on the
+        # next full-page render. No session state to stash.
+        is_htmx = request.headers.get("HX-Request") == "true"
+        if not (is_htmx and _is_injectable_html(response)):
             return response
 
-        is_htmx = request.headers.get("HX-Request") == "true"
-        if is_htmx and _is_injectable_html(response):
-            # Show it on this very interaction: append an OOB swap that fills the
-            # dialog. The client opens it on htmx:afterSettle (i.e. after this
-            # swap lands in the DOM).
-            defs = [global_registry[k] for k in pending_keys if k in global_registry]
-            fragment = render_to_string(
-                "achievements/_celebration_oob.html", {"achievements": defs}
-            )
-            # First-ever achievement(s): reveal the nav link live. It's the first
-            # time iff every achievement the user now has was earned just now.
-            if new_ones and (
-                Achievement.objects.filter(user=request.user).count() == len(new_ones)
-            ):
-                fragment += render_to_string("achievements/_nav_achievements_oob.html")
-            response.content = response.content + fragment.encode("utf-8")
-            if response.has_header("Content-Length"):
-                response["Content-Length"] = str(len(response.content))
-            request.session["pending_achievements"] = []
-            request.session.modified = True
-        else:
-            # Redirects / non-htmx responses can't carry the swap; stash for the
-            # next full page render (handled by the context processor).
-            request.session["pending_achievements"] = pending_keys
-            request.session.modified = True
+        # Deliver everything still unacknowledged, not just what was earned on
+        # this request, so a celebration whose acknowledgment never reached the
+        # server is retried on the next interaction.
+        defs = unacknowledged_achievements(request.user)
+        if not defs:
+            return response
+
+        fragment = render_to_string(
+            "achievements/_celebration_oob.html", {"achievements": defs}
+        )
+        # First-ever achievement(s): reveal the nav link live. It's the first
+        # time iff every achievement the user now has was earned just now.
+        if new_ones and (
+            Achievement.objects.filter(user=request.user).count() == len(new_ones)
+        ):
+            fragment += render_to_string("achievements/_nav_achievements_oob.html")
+        response.content = response.content + fragment.encode("utf-8")
+        if response.has_header("Content-Length"):
+            response["Content-Length"] = str(len(response.content))
 
         return response
