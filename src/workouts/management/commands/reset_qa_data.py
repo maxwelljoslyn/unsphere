@@ -11,13 +11,12 @@ movement catalog.
 from django.core.management.base import BaseCommand
 
 from achievements.models import Achievement
+from gems.models import GemTransaction
 from workouts.models import CardioExercise, StrengthExercise, Workout
 
 
 class Command(BaseCommand):
-    help = (
-        "Delete all workouts, exercises, and achievements (keeps users and movements)."
-    )
+    help = "Delete all workouts, exercises, achievements, and gems (keeps users and movements)."
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -31,17 +30,23 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if not options["noinput"]:
             answer = input(
-                "Delete ALL workouts, exercises, and achievements? "
+                "Delete ALL workouts, exercises, achievements, and gems? "
                 "(users and movements are kept) [y/N]: "
             )
             if answer.strip().lower() not in {"y", "yes"}:
                 self.stdout.write(self.style.WARNING("Aborted; nothing deleted."))
                 return
 
-        # Delete exercises and achievements before workouts. (Exercises would
-        # cascade when workouts are deleted, but doing them first yields honest
-        # per-model counts. Achievements aren't tied to workouts.)
-        for model in (CardioExercise, StrengthExercise, Achievement, Workout):
+        # Delete exercises before workouts. (Exercises would cascade when
+        # workouts are deleted, but doing them first yields honest per-model
+        # counts. Achievements and gems aren't tied to workouts.)
+        for model in (
+            CardioExercise,
+            StrengthExercise,
+            Achievement,
+            GemTransaction,
+            Workout,
+        ):
             count, _ = model.objects.all().delete()
             self.stdout.write(f"  {model.__name__}: {count} deleted")
 

@@ -29,6 +29,59 @@
       25%  { transform: scale(2); }   /* 1s in: grown to 2x */
       100% { transform: scale(1); }   /* next 3s: back to original */
     }
+    /* Gem toast: a transient "+N 💎" pill, bottom-right. The inner node is
+       replaced on each grant, so this fade-in/hold/fade-out replays every time;
+       it self-hides at the end (no JS), and the gems live in the ledger
+       regardless of whether the toast is seen. */
+    #gem-toast {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      z-index: 1000;
+      pointer-events: none;
+    }
+    .gem-toast-pop {
+      display: inline-block;
+      background: #1f2937;
+      color: #fff;
+      padding: 0.5rem 0.9rem;
+      border-radius: 999px;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+      animation: gem-toast 2.6s ease-in-out forwards;
+    }
+    @keyframes gem-toast {
+      0%   { opacity: 0; transform: translateY(8px); }
+      12%  { opacity: 1; transform: translateY(0); }
+      80%  { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-8px); }
+    }
+    /* Swap animation for the nav gem count: the old value shrinks to nothing,
+       then the new value grows in from nothing in the same spot. JS builds the
+       [old, new] pair when the count changes; the two are stacked in one grid
+       cell so they share a place, and the count collapses back to a plain
+       number once the grow finishes. Keyframe animations (not transitions) so
+       they reliably play on these freshly inserted nodes. */
+    .gem-count { display: inline-block; vertical-align: baseline; }
+    .gem-swap { display: inline-grid; }
+    .gem-swap > span {
+      grid-area: 1 / 1;        /* stack both values in the same cell */
+      transform-origin: center;
+    }
+    .gem-swap .gem-old { animation: gem-shrink 300ms ease-in forwards; }
+    .gem-swap .gem-new { animation: gem-grow 300ms ease-out 300ms both; }
+    @keyframes gem-shrink {
+      from { transform: scale(1); opacity: 1; }
+      to   { transform: scale(0); opacity: 0; }
+    }
+    @keyframes gem-grow {
+      from { transform: scale(0); opacity: 0; }
+      to   { transform: scale(1); opacity: 1; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .gem-swap .gem-old { display: none; }
+      .gem-swap .gem-new { animation: none; }
+    }
   </style>
   <script src="https://unpkg.com/htmx.org@2.0.4/dist/htmx.min.js"></script>
   <script>
@@ -63,7 +116,7 @@
 {% if user.is_authenticated %}
 <nav>
   <a href="{% url 'workout-list' %}">Workouts</a> |
-  <a href="{% url 'movement-list' %}">Movements</a><span id="nav-achievements-link">{% if has_achievements %}{% include "achievements/_nav_achievements_link.html" %}{% endif %}</span> |
+  <a href="{% url 'movement-list' %}">Movements</a><span id="nav-achievements-link">{% if has_achievements %}{% include "achievements/_nav_achievements_link.html" %}{% endif %}</span><span id="nav-gems">{% if gem_balance %}{% include "gems/_nav_gems.html" %}{% endif %}</span> |
   <form method="post" action="{% url 'logout' %}" style="display:inline">
     {% csrf_token %}
     <button type="submit">Log out ({{ user.username }})</button>
@@ -180,6 +233,75 @@
         setTimeout(showNext, REOPEN_DELAY_MS);
       }
     });
+  })();
+</script>
+<div id="gem-toast" aria-live="polite"></div>
+<script>
+  // Odometer roll for the nav gem count. GemMiddleware updates #nav-gems via an
+  // htmx out-of-band swap; rather than depend on a specific htmx event, a
+  // MutationObserver watches #nav-gems for the count actually changing and
+  // animates the transition (old slides up and out, new rises from the bottom).
+  // The gems themselves are already in the ledger and the swap has set the new
+  // text — the roll is pure decoration, so any failure just shows the new value.
+  (function () {
+    var ROLL_MS = 600; // shrink (300ms) + grow (300ms)
+    var nav = document.getElementById("nav-gems");
+    if (!nav || typeof MutationObserver === "undefined") return;
+    var reduce = window.matchMedia
+      && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    function countEl() { return nav.querySelector(".gem-count"); }
+    function readCount() {
+      var el = countEl();
+      return el ? el.textContent.trim() : null;
+    }
+
+    // Last value we've settled on. Null when the counter isn't shown yet (zero
+    // balance): the first reveal then just appears, with nothing to roll from.
+    var prev = readCount();
+    // Set while we're rewriting .gem-count ourselves, so the observer ignores
+    // the mutations the roll itself causes (otherwise it would re-trigger).
+    var animating = false;
+
+    function roll(oldVal, newVal) {
+      var el = countEl();
+      if (!el) return;
+      if (reduce) { el.textContent = newVal; return; }
+
+      animating = true;
+      // Stack [old, new]; CSS shrinks the old value out, then grows the new one
+      // in. The animations play on insert (fresh nodes).
+      el.innerHTML =
+        '<span class="gem-swap"><span class="gem-old"></span><span class="gem-new"></span></span>';
+      var swap = el.firstChild;
+      swap.children[0].textContent = oldVal;
+      swap.children[1].textContent = newVal;
+
+      var done = false;
+      function collapse() {
+        if (done) return;
+        done = true;
+        el.textContent = newVal; // back to a plain, clean number
+        animating = false;
+      }
+      // The new value finishes last; collapse when its grow ends.
+      swap.children[1].addEventListener("animationend", collapse, { once: true });
+      // Fallback in case animationend never fires (e.g. tab backgrounded).
+      setTimeout(collapse, ROLL_MS + 120);
+    }
+
+    // Fires whenever htmx rewrites #nav-gems. Comparing against `prev` makes it
+    // order-independent across the separate toast and nav swaps in one response,
+    // and the `animating` guard skips the roll's own DOM edits.
+    new MutationObserver(function () {
+      if (animating) return;
+      var now = readCount();
+      if (now === null) return;            // counter still hidden
+      if (prev !== null && now !== prev) { // genuine change → roll
+        roll(prev, now);
+      }
+      prev = now;
+    }).observe(nav, { childList: true, subtree: true, characterData: true });
   })();
 </script>
 <main class="container">{% block content %}{% endblock %}</main>

@@ -1,0 +1,6 @@
+{% comment %}
+The gem counter nav entry, including the leading "|" separator. Rendered inside
+#nav-gems — inline on full pages (when the user has any gems) and as an htmx
+out-of-band swap whenever the balance changes. The count lives in its own
+.gem-count span so it can be animated independently of the 💎 and separator.
+{% endcomment %} | <span class="gem-pill" title="Gems">💎&nbsp;<span class="gem-count">{{ gem_balance }}</span></span>

@@ -1,0 +1,6 @@
+{% comment %}
+Out-of-band swap appended by GemMiddleware whenever an htmx interaction grants
+gems. htmx fills #nav-gems in place, updating the counter without a page reload
+(and revealing it the first time the balance becomes non-zero).
+{% endcomment %}
+<span id="nav-gems" hx-swap-oob="innerHTML">{% include "gems/_nav_gems.html" %}</span>

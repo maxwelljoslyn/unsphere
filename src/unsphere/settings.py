@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "users",
     "workouts",
     "achievements",
+    "gems",
 ]
 
 MIDDLEWARE = [
@@ -60,7 +61,11 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # Listed after AchievementMiddleware so it sits closer to the view: on the
+    # response trip it runs first, crediting gems before achievements are
+    # checked — so a future gem-count achievement sees this request's gems.
     "achievements.middleware.AchievementMiddleware",
+    "gems.middleware.GemMiddleware",
 ]
 
 ROOT_URLCONF = "unsphere.urls"
@@ -78,6 +83,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "achievements.context_processors.nav_achievements",
                 "achievements.context_processors.pending_achievements",
+                "gems.context_processors.nav_gems",
             ],
         },
     },

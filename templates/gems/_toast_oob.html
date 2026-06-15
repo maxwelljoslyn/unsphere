@@ -1,0 +1,8 @@
+{% comment %}
+Out-of-band swap appended by GemMiddleware: a transient "+N 💎" toast for the
+gems just earned. Gems already live in the ledger and the nav shows the true
+balance, so a dropped toast loses only the flourish, not the gems — hence no
+acknowledge/requeue. The inner .gem-toast-pop is a fresh node each swap, so its
+CSS fade-in/out animation replays every time.
+{% endcomment %}
+<div id="gem-toast" hx-swap-oob="innerHTML"><div class="gem-toast-pop">+{{ granted }}&nbsp;💎</div></div>
