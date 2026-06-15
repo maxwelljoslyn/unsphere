@@ -1,5 +1,7 @@
 {% comment %}
-The Achievements nav entry, including the leading "|" separator. Rendered inside
-#nav-achievements-link — inline on full pages (when the user has any
-achievements) and as an htmx out-of-band swap the moment they earn their first.
-{% endcomment %} | <a href="{% url 'achievement-list' %}">Achievements</a>
+The Achievements nav entry — a direct child of the nav bar, styled as a button
+by the bar's flex layout. It carries id="nav-achievements-link" itself: on full
+pages (when the user has any achievements) it renders inline, and on the htmx
+interaction where they earn their first it's sent as an out-of-band swap
+(oob=True) that replaces the empty placeholder of the same id.
+{% endcomment %}<a id="nav-achievements-link" href="{% url 'achievement-list' %}"{% if oob %} hx-swap-oob="outerHTML"{% endif %}>Achievements</a>

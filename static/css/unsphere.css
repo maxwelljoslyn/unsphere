@@ -132,22 +132,58 @@ nav {
   font-family: var(--font-display);
   font-weight: 700;
 }
-nav a {
+/* Every nav control — the section links and the logout button — reads as the
+   same small sage chip, matching "New Workout". They carry their own borders
+   and offset shadows, so the bar needs no "|" separators between them; the
+   flex gap does the spacing. */
+nav a,
+nav button {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--ink);
   text-decoration: none;
-  padding: 0.2rem 0.55rem;
+  background: var(--sage);
+  border: var(--b) solid var(--ink);
   border-radius: var(--r-sm);
-  transition: background 0.12s ease, color 0.12s ease;
+  box-shadow: 2px 2px 0 var(--ink);
+  padding: 0.3rem 0.7rem;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.12s ease;
 }
-nav a:hover { background: var(--butter); }
-/* The literal "|" separators between links — quiet them down. */
-nav { color: var(--peri); }
-nav a, nav button { color: var(--ink); }
+nav a:hover,
+nav button:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+nav a:active,
+nav button:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0 0 0 var(--ink);
+}
 
-/* The achievements/gems nav slots are present from the start so HTMX can swap
-   content into them on first unlock. Until then they're empty — and as flex
-   items even empty spans take a gap on each side, padding out the space after
-   Movements. Pull them from the layout while empty; HTMX filling them (which
-   removes :empty) brings them back. */
+/* The gem balance is a readout, not a control: a soft, shadowless chip so it
+   reads as information sitting among the buttons rather than something to
+   click. */
+nav .gem-pill {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--ink);
+  background: var(--butter-soft);
+  border: var(--b) solid var(--ink);
+  border-radius: var(--r-sm);
+  padding: 0.3rem 0.6rem;
+  white-space: nowrap;
+}
+
+/* The achievements link and gem readout are direct nav children carrying the id
+   HTMX swaps into, so they're laid out exactly like the other nav items. Each
+   is present from the start as a swap target — empty until the first unlock —
+   so hide it while empty (an empty flex item would otherwise take a gap on each
+   side, padding out the space after Movements); HTMX filling it removes :empty
+   and brings it back. */
 #nav-achievements-link:empty,
 #nav-gems:empty { display: none; }
 
@@ -163,13 +199,16 @@ hr {
 }
 
 /* ------------------------------------------------------------------ Buttons */
+/* Buttons come in two colors: coral for form submits (below) and sage for
+   everything else. Butter is reserved for non-interactive accents (the Draft
+   pill, the h1 underline), so nothing yellow reads as a button. */
 button,
 input[type="submit"] {
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 0.95rem;
   color: var(--ink);
-  background: var(--butter);
+  background: var(--sage);
   border: var(--b) solid var(--ink);
   border-radius: var(--r-sm);
   box-shadow: var(--shadow);
@@ -201,15 +240,6 @@ a:focus-visible {
 /* The primary "Save" / submit action wears coral. */
 form button[type="submit"],
 form input[type="submit"] { background: var(--coral); }
-
-/* The logout button lives in the nav — keep it small and sage. */
-nav button {
-  background: var(--sage);
-  box-shadow: 2px 2px 0 var(--ink);
-  padding: 0.3rem 0.7rem;
-  font-size: 0.85rem;
-}
-nav button:hover { box-shadow: 3px 3px 0 var(--ink); }
 
 /* ----------------------------------------------------- Form fields & inputs */
 form p { margin: 0 0 1rem; }
@@ -310,10 +340,32 @@ textarea:focus {
   align-items: center;
   flex-wrap: wrap;
   gap: 0.5rem;
+}
+/* The row card itself is never a click target — only the links and buttons
+   inside it are — so the card doesn't lift on hover (that would imply the whole
+   row is clickable). The inner controls carry their own hover affordance: the
+   title link underlines (below) and the buttons lift on their own. */
+.container > ul > li > a:first-child:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--coral);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+/* A whole workout row is one click target: the anchor's ::after is stretched
+   over the card, so clicking anywhere on the row navigates to the detail. The
+   row lifts on hover to advertise that it's clickable. */
+.container > ul > li.row-link {
+  position: relative;
   transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
-.container > ul > li:hover,
-#exercise-list > li:hover {
+.container > ul > li.row-link > a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+.container > ul > li.row-link:hover {
   transform: translate(-2px, -2px);
   box-shadow: var(--shadow-lg);
 }
@@ -525,14 +577,20 @@ time { font-variant-numeric: tabular-nums; }
 }
 
 /* -------------------------------------------------- Workout draft status */
+/* These are read-only status tags, not controls — so they deliberately avoid
+   the button look (slightly-rounded rectangle + offset shadow). A fully-round
+   pill with a small uppercase label reads as a state, not something to click. */
 .draft-badge,
 .saved-badge {
   display: inline-block;
   border: var(--b) solid var(--ink);
-  border-radius: var(--r-sm);
-  padding: 0.05rem 0.5rem;
-  font-size: 0.8rem;
-  font-weight: 700;
+  border-radius: 999px;
+  padding: 0.1rem 0.6rem;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   vertical-align: middle;
 }
 .draft-badge { background: var(--butter); }
