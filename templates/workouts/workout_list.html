@@ -5,7 +5,7 @@
 <p><a href="{% url 'workout-create' %}">New Workout</a></p>
 <ul>
 {% for workout in workouts %}
-  <li><a href="{% url 'workout-detail' workout.pk %}">{% include "workouts/_workout_datetime.html" %}{% if workout.notes %} — {{ workout.notes }}{% endif %}</a>{% if workout.is_draft %} <span class="draft-badge">Draft</span>{% endif %}</li>
+  <li><strong>{{ workout.user.username }}</strong> — <a href="{% url 'workout-detail' workout.pk %}">{% include "workouts/_workout_datetime.html" %}{% if workout.notes %} — {{ workout.notes }}{% endif %}</a>{% if workout.is_draft %} <span class="draft-badge">Draft</span>{% endif %}</li>
 {% empty %}
   <li>No workouts yet.</li>
 {% endfor %}

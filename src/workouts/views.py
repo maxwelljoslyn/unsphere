@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -10,7 +11,11 @@ from .models import CardioExercise, Movement, StrengthExercise, Workout
 
 @login_required
 def workout_list(request):
-    workouts = Workout.objects.filter(user=request.user)
+    # Everyone sees all confirmed workouts, plus their own drafts. Other users'
+    # unconfirmed drafts stay private.
+    workouts = Workout.objects.filter(
+        Q(confirmed_at__isnull=False) | Q(user=request.user)
+    ).select_related("user")
     return render(request, "workouts/workout_list.html", {"workouts": workouts})
 
 
@@ -30,12 +35,18 @@ def workout_create(request):
 
 @login_required
 def workout_detail(request, pk):
-    workout = get_object_or_404(Workout, pk=pk, user=request.user)
+    # Anyone may view a confirmed workout; drafts remain visible only to their
+    # owner. Mutating controls are gated to the owner via `is_owner`.
+    workout = get_object_or_404(
+        Workout.objects.filter(Q(confirmed_at__isnull=False) | Q(user=request.user)),
+        pk=pk,
+    )
     return render(
         request,
         "workouts/workout_detail.html",
         {
             "workout": workout,
+            "is_owner": workout.user_id == request.user.id,
             "cardio_exercises": workout.cardioexercises.all(),
             "strength_exercises": workout.strengthexercises.all(),
         },
@@ -106,6 +117,7 @@ def cardio_exercise_add(request, workout_pk):
                     "workout": workout,
                     "ex": ex,
                     "ex_type": "cardio",
+                    "is_owner": True,
                 },
             )
         return render(
@@ -128,7 +140,9 @@ def cardio_exercise_edit(request, pk):
         form = CardioExerciseForm(request.POST, instance=ex)
         if form.is_valid():
             form.save()
-            return render(request, "workouts/_cardio_exercise.html", {"ex": ex})
+            return render(
+                request, "workouts/_cardio_exercise.html", {"ex": ex, "is_owner": True}
+            )
         return render(
             request, "workouts/_cardio_edit_form.html", {"ex": ex, "form": form}
         )
@@ -160,6 +174,7 @@ def strength_exercise_add(request, workout_pk):
                     "workout": workout,
                     "ex": ex,
                     "ex_type": "strength",
+                    "is_owner": True,
                 },
             )
         return render(
@@ -182,7 +197,11 @@ def strength_exercise_edit(request, pk):
         form = StrengthExerciseForm(request.POST, instance=ex)
         if form.is_valid():
             form.save()
-            return render(request, "workouts/_strength_exercise.html", {"ex": ex})
+            return render(
+                request,
+                "workouts/_strength_exercise.html",
+                {"ex": ex, "is_owner": True},
+            )
         return render(
             request, "workouts/_strength_edit_form.html", {"ex": ex, "form": form}
         )

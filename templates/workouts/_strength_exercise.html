@@ -1,4 +1,5 @@
 <li id="strength-exercise-{{ ex.pk }}">{{ ex.movement }} — {{ ex.sets }}×{{ ex.reps }}{% if ex.weight %} @ {{ ex.weight }}{% endif %}{% if ex.notes %} ({{ ex.notes }}){% endif %}
+  {% if is_owner %}
   <button hx-get="{% url 'strength-exercise-edit' ex.pk %}"
           hx-target="#strength-exercise-{{ ex.pk }}"
           hx-swap="outerHTML">Edit</button>
@@ -6,4 +7,5 @@
           hx-target="#strength-exercise-{{ ex.pk }}"
           hx-swap="outerHTML"
           hx-confirm="Delete this exercise?">Delete</button>
+  {% endif %}
 </li>

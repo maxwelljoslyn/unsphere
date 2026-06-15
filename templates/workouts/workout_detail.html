@@ -4,12 +4,16 @@
 <h1>{% include "workouts/_workout_datetime.html" %}</h1>
 {% if workout.notes %}<p>{{ workout.notes }}</p>{% endif %}
 <p>
-  <a href="{% url 'workout-list' %}">← Back</a> |
+  <a href="{% url 'workout-list' %}">← Back</a>
+  {% if is_owner %}|
   <a href="{% url 'workout-edit' workout.pk %}">Edit</a> |
   <a href="{% url 'workout-delete' workout.pk %}">Delete</a>
+  {% endif %}
 </p>
 
-{% include "workouts/_workout_status.html" %}
+{% if not is_owner %}<p>Logged by <strong>{{ workout.user.username }}</strong></p>{% endif %}
+
+{% if is_owner %}{% include "workouts/_workout_status.html" %}{% endif %}
 
 <h2>Exercises</h2>
 <ul id="exercise-list">
@@ -17,6 +21,7 @@
   {% for ex in strength_exercises %}{% include "workouts/_strength_exercise.html" %}{% endfor %}
 </ul>
 
+{% if is_owner %}
 <div id="add-exercise-area">
   <button hx-get="{% url 'cardio-exercise-add' workout.pk %}"
           hx-target="#add-exercise-area"
@@ -25,4 +30,5 @@
           hx-target="#add-exercise-area"
           hx-swap="outerHTML">Add Strength Exercise</button>
 </div>
+{% endif %}
 {% endblock %}

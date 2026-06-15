@@ -155,11 +155,64 @@ def test_workout_detail_shows_time_in_origin_zone_with_label(auth_client, user):
 
 
 @pytest.mark.django_db
-def test_workout_detail_scoped_to_owner(client, django_user_model, workout):
+def test_workout_detail_draft_scoped_to_owner(client, django_user_model, workout):
+    # `workout` is a draft; other users may not view it.
     other = django_user_model.objects.create_user(username="bob", password="pw")
     client.force_login(other)
     resp = client.get(reverse("workout-detail", args=[workout.pk]))
     assert resp.status_code == 404
+
+
+@pytest.mark.django_db
+def test_workout_detail_confirmed_viewable_by_non_owner(
+    client, django_user_model, user
+):
+    w = Workout.objects.create(
+        user=user,
+        date=dt.datetime(2026, 1, 1, 8, 0, tzinfo=dt.timezone.utc),
+        confirmed_at=dt.datetime(2026, 1, 1, 9, 0, tzinfo=dt.timezone.utc),
+    )
+    other = django_user_model.objects.create_user(username="bob", password="pw")
+    client.force_login(other)
+    content = client.get(reverse("workout-detail", args=[w.pk])).content.decode()
+    # Owner-only controls are hidden; the logger's name is shown instead.
+    assert "Logged by" in content
+    assert "alice" in content
+    assert reverse("workout-edit", args=[w.pk]) not in content
+    assert reverse("workout-delete", args=[w.pk]) not in content
+
+
+# --- Workout list visibility ------------------------------------------------
+
+
+@pytest.mark.django_db
+def test_workout_list_shows_others_confirmed_and_hides_others_drafts(
+    auth_client, django_user_model
+):
+    other = django_user_model.objects.create_user(username="bob", password="pw")
+    confirmed = Workout.objects.create(
+        user=other,
+        date=dt.datetime(2026, 1, 2, 8, 0, tzinfo=dt.timezone.utc),
+        notes="bob confirmed",
+        confirmed_at=dt.datetime(2026, 1, 2, 9, 0, tzinfo=dt.timezone.utc),
+    )
+    draft = Workout.objects.create(
+        user=other,
+        date=dt.datetime(2026, 1, 3, 8, 0, tzinfo=dt.timezone.utc),
+        notes="bob draft",
+    )
+    content = auth_client.get(reverse("workout-list")).content.decode()
+    assert "bob confirmed" in content
+    assert "bob" in content  # username surfaced
+    assert reverse("workout-detail", args=[confirmed.pk]) in content
+    assert "bob draft" not in content
+    assert reverse("workout-detail", args=[draft.pk]) not in content
+
+
+@pytest.mark.django_db
+def test_workout_list_shows_own_drafts(auth_client, workout):
+    content = auth_client.get(reverse("workout-list")).content.decode()
+    assert reverse("workout-detail", args=[workout.pk]) in content
 
 
 # --- Cardio exercise add (HTMX) ---------------------------------------------

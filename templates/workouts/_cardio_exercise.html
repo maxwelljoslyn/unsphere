@@ -1,4 +1,5 @@
 <li id="cardio-exercise-{{ ex.pk }}">{{ ex.movement }}{% if ex.distance %} — {{ ex.distance }}{% endif %}{% if ex.duration %} in {{ ex.duration }}{% endif %}{% if ex.notes %} ({{ ex.notes }}){% endif %}
+  {% if is_owner %}
   <button hx-get="{% url 'cardio-exercise-edit' ex.pk %}"
           hx-target="#cardio-exercise-{{ ex.pk }}"
           hx-swap="outerHTML">Edit</button>
@@ -6,4 +7,5 @@
           hx-target="#cardio-exercise-{{ ex.pk }}"
           hx-swap="outerHTML"
           hx-confirm="Delete this exercise?">Delete</button>
+  {% endif %}
 </li>
