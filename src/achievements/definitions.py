@@ -72,28 +72,28 @@ AchievementDef(
 
 AchievementDef(
     key="ten_workouts",
-    name="Regular",
+    name="Commitment",
     description="You've logged 10 workouts.",
     threshold=lambda user: _workout_count(user) >= 10,
 )
 
 AchievementDef(
     key="fifteen_workouts",
-    name="In the Groove",
+    name="Greasing That Groove",
     description="You've logged 15 workouts.",
     threshold=lambda user: _workout_count(user) >= 15,
 )
 
 AchievementDef(
     key="twenty_workouts",
-    name="Dedicated",
+    name="Dedication",
     description="You've logged 20 workouts.",
     threshold=lambda user: _workout_count(user) >= 20,
 )
 
 AchievementDef(
     key="twenty_five_workouts",
-    name="Quarter Hundred",
+    name="Quarter-Hundo",
     description="You've logged 25 workouts!",
     threshold=lambda user: _workout_count(user) >= 25,
 )
