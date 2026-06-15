@@ -143,6 +143,14 @@ nav a:hover { background: var(--butter); }
 nav { color: var(--peri); }
 nav a, nav button { color: var(--ink); }
 
+/* The achievements/gems nav slots are present from the start so HTMX can swap
+   content into them on first unlock. Until then they're empty — and as flex
+   items even empty spans take a gap on each side, padding out the space after
+   Movements. Pull them from the layout while empty; HTMX filling them (which
+   removes :empty) brings them back. */
+#nav-achievements-link:empty,
+#nav-gems:empty { display: none; }
+
 /* The nav already reads as a bar; the trailing <hr> is now redundant. */
 nav + hr { display: none; }
 
