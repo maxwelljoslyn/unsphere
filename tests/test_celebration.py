@@ -24,10 +24,13 @@ def auth_client(client, user):
 @pytest.mark.django_db
 def test_htmx_earn_injects_oob_celebration_and_trigger(auth_client, user):
     movement = Movement.objects.create(name="rower", kind=Movement.CARDIO)
+    # Confirmed up front: per decision A, adding an exercise to an already-saved
+    # workout counts live, so this add earns the workout + cardio achievements.
     workout = Workout.objects.create(
         user=user,
         date=dt.datetime(2026, 1, 1, 8, 0, tzinfo=dt.timezone.utc),
         timezone="UTC",
+        confirmed_at=dt.datetime(2026, 1, 1, 9, 0, tzinfo=dt.timezone.utc),
     )
     resp = auth_client.post(
         reverse("cardio-exercise-add", args=[workout.pk]),
@@ -66,12 +69,19 @@ def test_htmx_earn_injects_oob_celebration_and_trigger(auth_client, user):
 
 @pytest.mark.django_db
 def test_non_htmx_redirect_defers_then_full_page_shows(auth_client, user):
-    # A full-page create redirects; the achievement can't ride a 302, so the
-    # earned row simply waits, unacknowledged, in the DB.
-    resp = auth_client.post(
-        reverse("workout-create"),
-        {"date": "2026-02-02T18:30", "timezone": "UTC", "notes": ""},
+    # Creating a workout makes a draft, which counts toward nothing yet.
+    workout = Workout.objects.create(
+        user=user,
+        date=dt.datetime(2026, 2, 2, 18, 30, tzinfo=dt.timezone.utc),
+        timezone="UTC",
     )
+    assert not Achievement.objects.filter(
+        user=user, achievement_key="one_workout"
+    ).exists()
+
+    # Confirming is a full-page POST that redirects; the achievement can't ride a
+    # 302, so the earned row simply waits, unacknowledged, in the DB.
+    resp = auth_client.post(reverse("workout-confirm", args=[workout.pk]))
     assert resp.status_code == 302
     assert Achievement.objects.filter(
         user=user, achievement_key="one_workout", acknowledged_at__isnull=True

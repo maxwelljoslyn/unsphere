@@ -24,9 +24,14 @@ def test_one_workout_threshold(django_user_model):
     user = django_user_model.objects.create_user(username="thresh", password="pw")
     adef = registry["one_workout"]
     assert adef.threshold(user) is False
-    Workout.objects.create(
+    # A draft workout doesn't count.
+    workout = Workout.objects.create(
         user=user, date=dt.datetime(2026, 1, 1, 8, 0, tzinfo=dt.timezone.utc)
     )
+    assert adef.threshold(user) is False
+    # Confirming it makes it count.
+    workout.confirmed_at = dt.datetime(2026, 1, 1, 9, 0, tzinfo=dt.timezone.utc)
+    workout.save(update_fields=["confirmed_at"])
     assert adef.threshold(user) is True
 
 
@@ -35,7 +40,9 @@ def test_first_cardio_awarded_via_checker(django_user_model):
     user = django_user_model.objects.create_user(username="cardio", password="pw")
     movement = Movement.objects.create(name="elliptical", kind=Movement.CARDIO)
     workout = Workout.objects.create(
-        user=user, date=dt.datetime(2026, 1, 1, 8, 0, tzinfo=dt.timezone.utc)
+        user=user,
+        date=dt.datetime(2026, 1, 1, 8, 0, tzinfo=dt.timezone.utc),
+        confirmed_at=dt.datetime(2026, 1, 1, 9, 0, tzinfo=dt.timezone.utc),
     )
     from unsphere.units import u
 

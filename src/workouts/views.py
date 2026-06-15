@@ -1,7 +1,8 @@
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.decorators.http import require_http_methods
+from django.utils import timezone
+from django.views.decorators.http import require_http_methods, require_POST
 
 from .forms import CardioExerciseForm, MovementForm, StrengthExerciseForm, WorkoutForm
 from .models import CardioExercise, Movement, StrengthExercise, Workout
@@ -63,6 +64,25 @@ def workout_delete(request, pk):
         workout.delete()
         return redirect("workout-list")
     return render(request, "workouts/workout_confirm_delete.html", {"workout": workout})
+
+
+@login_required
+@require_POST
+def workout_confirm(request, pk):
+    """Confirm a draft workout so it starts counting toward gems/achievements.
+
+    Idempotent: confirming an already-confirmed workout leaves its timestamp
+    untouched. The gem/achievement evaluation isn't done here — it rides the
+    normal middleware pass over this very request, which now sees the workout as
+    confirmed, so celebrations and the gem toast are injected as usual.
+    """
+    workout = get_object_or_404(Workout, pk=pk, user=request.user)
+    if workout.confirmed_at is None:
+        workout.confirmed_at = timezone.now()
+        workout.save(update_fields=["confirmed_at"])
+    if request.headers.get("HX-Request") == "true":
+        return render(request, "workouts/_workout_status.html", {"workout": workout})
+    return redirect("workout-detail", pk=workout.pk)
 
 
 # ---------------------------------------------------------------------------

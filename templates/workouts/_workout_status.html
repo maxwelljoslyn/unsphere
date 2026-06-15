@@ -1,0 +1,13 @@
+<div id="workout-status">
+{% if workout.is_draft %}
+  <p>
+    <span class="draft-badge">Draft</span>
+    <button hx-post="{% url 'workout-confirm' workout.pk %}"
+            hx-target="#workout-status"
+            hx-swap="outerHTML">Save workout</button>
+  </p>
+  <p class="hint">This workout won't count toward gems or achievements until you save it.</p>
+{% else %}
+  <p><span class="saved-badge">✓ Saved</span></p>
+{% endif %}
+</div>

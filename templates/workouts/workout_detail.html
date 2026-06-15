@@ -9,6 +9,8 @@
   <a href="{% url 'workout-delete' workout.pk %}">Delete</a>
 </p>
 
+{% include "workouts/_workout_status.html" %}
+
 <h2>Exercises</h2>
 <ul id="exercise-list">
   {% for ex in cardio_exercises %}{% include "workouts/_cardio_exercise.html" %}{% endfor %}

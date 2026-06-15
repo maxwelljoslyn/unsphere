@@ -515,3 +515,18 @@ time { font-variant-numeric: tabular-nums; }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
+
+/* -------------------------------------------------- Workout draft status */
+.draft-badge,
+.saved-badge {
+  display: inline-block;
+  border: var(--b) solid var(--ink);
+  border-radius: var(--r-sm);
+  padding: 0.05rem 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  vertical-align: middle;
+}
+.draft-badge { background: var(--butter); }
+.saved-badge { background: var(--sage-soft); }
+#workout-status .hint { color: var(--ink-soft); font-size: 0.85rem; margin-top: 0.25rem; }

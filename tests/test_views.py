@@ -95,6 +95,54 @@ def test_workout_delete(auth_client, workout):
 
 
 @pytest.mark.django_db
+def test_workout_created_as_draft(auth_client, user):
+    auth_client.post(
+        reverse("workout-create"),
+        {"date": "2026-02-02T18:30", "timezone": "UTC", "notes": "draft day"},
+    )
+    workout = Workout.objects.get(user=user, notes="draft day")
+    assert workout.is_draft
+
+
+@pytest.mark.django_db
+def test_workout_confirm_sets_timestamp_and_is_idempotent(auth_client, workout):
+    assert workout.is_draft
+    resp = auth_client.post(reverse("workout-confirm", args=[workout.pk]))
+    assert resp.status_code == 302
+    workout.refresh_from_db()
+    assert workout.confirmed_at is not None
+    first = workout.confirmed_at
+
+    # Re-confirming leaves the original timestamp untouched.
+    auth_client.post(reverse("workout-confirm", args=[workout.pk]))
+    workout.refresh_from_db()
+    assert workout.confirmed_at == first
+
+
+@pytest.mark.django_db
+def test_workout_confirm_htmx_returns_saved_status(auth_client, workout):
+    resp = auth_client.post(
+        reverse("workout-confirm", args=[workout.pk]), HTTP_HX_REQUEST="true"
+    )
+    assert resp.status_code == 200
+    assert b"Saved" in resp.content
+
+
+@pytest.mark.django_db
+def test_workout_confirm_rejects_get(auth_client, workout):
+    resp = auth_client.get(reverse("workout-confirm", args=[workout.pk]))
+    assert resp.status_code == 405
+
+
+@pytest.mark.django_db
+def test_workout_confirm_scoped_to_owner(client, django_user_model, workout):
+    other = django_user_model.objects.create_user(username="mallory", password="pw")
+    client.force_login(other)
+    resp = client.post(reverse("workout-confirm", args=[workout.pk]))
+    assert resp.status_code == 404
+
+
+@pytest.mark.django_db
 def test_workout_detail_shows_time_in_origin_zone_with_label(auth_client, user):
     w = Workout.objects.create(
         user=user,

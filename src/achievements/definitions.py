@@ -16,7 +16,7 @@ from .achievements import AchievementDef
 def _workout_count(user) -> int:
     from workouts.models import Workout
 
-    return Workout.objects.filter(user=user).count()
+    return Workout.objects.filter(user=user, confirmed_at__isnull=False).count()
 
 
 def _achievement_count(user) -> int:
@@ -28,13 +28,17 @@ def _achievement_count(user) -> int:
 def _has_cardio(user) -> bool:
     from workouts.models import CardioExercise
 
-    return CardioExercise.objects.filter(workout__user=user).exists()
+    return CardioExercise.objects.filter(
+        workout__user=user, workout__confirmed_at__isnull=False
+    ).exists()
 
 
 def _has_strength(user) -> bool:
     from workouts.models import StrengthExercise
 
-    return StrengthExercise.objects.filter(workout__user=user).exists()
+    return StrengthExercise.objects.filter(
+        workout__user=user, workout__confirmed_at__isnull=False
+    ).exists()
 
 
 AchievementDef(

@@ -7,6 +7,7 @@ urlpatterns = [
     path("workouts/new/", views.workout_create, name="workout-create"),
     path("workouts/<int:pk>/", views.workout_detail, name="workout-detail"),
     path("workouts/<int:pk>/edit/", views.workout_edit, name="workout-edit"),
+    path("workouts/<int:pk>/confirm/", views.workout_confirm, name="workout-confirm"),
     path("workouts/<int:pk>/delete/", views.workout_delete, name="workout-delete"),
     path(
         "workouts/<int:workout_pk>/cardio/add/",

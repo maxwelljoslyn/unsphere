@@ -28,12 +28,20 @@ class Workout(models.Model):
     timezone = models.CharField(max_length=64, default="UTC")
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    # NULL while the workout is a draft being built; set when the user confirms
+    # it. Only confirmed workouts count toward gems and achievements, so a draft
+    # can be assembled exercise-by-exercise without prematurely awarding anything.
+    confirmed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ["-date", "-created_at"]
 
     def __str__(self):
         return f"{self.user} — {self.date}"
+
+    @property
+    def is_draft(self) -> bool:
+        return self.confirmed_at is None
 
 
 class Exercise(models.Model):
