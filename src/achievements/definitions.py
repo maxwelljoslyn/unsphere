@@ -41,6 +41,14 @@ def _has_strength(user) -> bool:
     ).exists()
 
 
+def _has_gems(user) -> bool:
+    from gems.middleware import lifetime_gems
+
+    # Lifetime, not spendable balance: once earned, the achievement stays earned
+    # even if the user later spends all their gems.
+    return lifetime_gems(user) >= 1
+
+
 AchievementDef(
     key="one_workout",
     name="Getting Started",
@@ -130,4 +138,11 @@ AchievementDef(
     name="Megachievement",
     description="You've earned ten achievements!",
     threshold=lambda user: _achievement_count(user) >= 10,
+)
+
+AchievementDef(
+    key="first_gem",
+    name="Stats, Gems, and Webs",
+    description="You earned your first gem.",
+    threshold=lambda user: _has_gems(user),
 )

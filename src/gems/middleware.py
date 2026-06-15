@@ -20,6 +20,18 @@ def gem_balance(user) -> int:
     return total or 0
 
 
+def lifetime_gems(user) -> int:
+    """Total gems ever earned: the sum of positive ledger entries only.
+
+    Unlike the spendable balance, this never decreases when gems are spent, so
+    it's the right basis for milestones like the first-gem achievement.
+    """
+    total = GemTransaction.objects.filter(user=user, amount__gt=0).aggregate(
+        total=Sum("amount")
+    )["total"]
+    return total or 0
+
+
 def _awarded_by_rule(user) -> Dict[str, int]:
     """Lifetime gems each rule has credited this user (positive amounts only).
 
