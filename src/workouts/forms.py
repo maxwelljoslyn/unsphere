@@ -19,6 +19,21 @@ def _safe_zone(name):
         return ZoneInfo(settings.TIME_ZONE)
 
 
+class FeedbackForm(forms.Form):
+    title = forms.CharField(
+        max_length=200,
+        widget=forms.TextInput(attrs={"placeholder": "Brief summary of the issue"}),
+    )
+    description = forms.CharField(
+        widget=forms.Textarea(
+            attrs={
+                "rows": 6,
+                "placeholder": "What happened? What did you expect instead?",
+            }
+        ),
+    )
+
+
 class WorkoutForm(forms.ModelForm):
     # Populated client-side from the browser's zone (see workout_form.html). The
     # datetime-local picker only gives a naive wall-clock time, so we pair it

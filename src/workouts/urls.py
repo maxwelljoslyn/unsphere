@@ -41,4 +41,5 @@ urlpatterns = [
     path("movements/new/", views.movement_create, name="movement-create"),
     path("movements/<int:pk>/edit/", views.movement_edit, name="movement-edit"),
     path("movements/<int:pk>/delete/", views.movement_delete, name="movement-delete"),
+    path("feedback/", views.feedback, name="feedback"),
 ]

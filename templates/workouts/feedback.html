@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Feedback — Unsphere{% endblock %}
+{% block content %}
+<h1>Report a Problem or Suggestion</h1>
+<p style="color: var(--ink-soft); margin-bottom: 1rem;">
+  Something broken? Have an idea? Let us know and we'll look into it.
+</p>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Submit Feedback</button>
+</form>
+{% endblock %}

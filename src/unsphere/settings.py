@@ -161,3 +161,11 @@ EMAIL_CONFIRMATION_REQUIRED = (
     os.environ.get("EMAIL_CONFIRMATION_REQUIRED", "false" if DEBUG else "true").lower()
     == "true"
 )
+
+# In-app feedback: the "Feedback" form posts a GitHub issue to this repo using
+# this token. The repo is "owner/name"; the token is a PAT with issue-write
+# access. Issues are filed as whoever owns the token (a deploy key won't work —
+# it can push git but can't call the REST API). Both empty in dev, where the
+# view reports "not configured" rather than reaching out to GitHub.
+GITHUB_FEEDBACK_REPO = os.environ.get("GITHUB_FEEDBACK_REPO", "")
+GITHUB_FEEDBACK_TOKEN = os.environ.get("GITHUB_FEEDBACK_TOKEN", "")

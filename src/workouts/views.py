@@ -1,3 +1,9 @@
+import json
+import logging
+from urllib.request import Request, urlopen
+
+from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import HttpResponse
@@ -5,8 +11,16 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods, require_POST
 
-from .forms import CardioExerciseForm, MovementForm, StrengthExerciseForm, WorkoutForm
+from .forms import (
+    CardioExerciseForm,
+    FeedbackForm,
+    MovementForm,
+    StrengthExerciseForm,
+    WorkoutForm,
+)
 from .models import CardioExercise, Movement, StrengthExercise, Workout
+
+logger = logging.getLogger(__name__)
 
 
 @login_required
@@ -266,3 +280,59 @@ def movement_delete(request, pk):
     return render(
         request, "workouts/movement_confirm_delete.html", {"movement": movement}
     )
+
+
+# --- Feedback ---
+
+
+@login_required
+def feedback(request):
+    if request.method == "POST":
+        form = FeedbackForm(request.POST)
+        if form.is_valid():
+            user = request.user
+            body = (
+                form.cleaned_data["description"]
+                + f"\n\n---\n*Submitted by {user.username} ({user.email})*"
+            )
+
+            repo = settings.GITHUB_FEEDBACK_REPO
+            token = settings.GITHUB_FEEDBACK_TOKEN
+            if not repo or not token:
+                logger.error("GITHUB_FEEDBACK_REPO or GITHUB_FEEDBACK_TOKEN not set")
+                messages.error(
+                    request,
+                    "Feedback system is not configured. Please contact the developer.",
+                )
+                return redirect("feedback")
+
+            payload = json.dumps(
+                {
+                    "title": form.cleaned_data["title"],
+                    "body": body,
+                    "labels": ["user-feedback"],
+                }
+            ).encode()
+            req = Request(
+                f"https://api.github.com/repos/{repo}/issues",
+                data=payload,
+                headers={
+                    "Authorization": f"Bearer {token}",
+                    "Accept": "application/vnd.github+json",
+                    "Content-Type": "application/json",
+                },
+                method="POST",
+            )
+            try:
+                urlopen(req)
+                messages.success(request, "Thanks! Your feedback has been submitted.")
+            except Exception:
+                logger.exception("Failed to create GitHub issue")
+                messages.error(
+                    request,
+                    "Something went wrong submitting your feedback. Please try again.",
+                )
+            return redirect("feedback")
+    else:
+        form = FeedbackForm()
+    return render(request, "workouts/feedback.html", {"form": form})
