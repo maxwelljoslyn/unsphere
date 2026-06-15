@@ -3,7 +3,12 @@ from zoneinfo import ZoneInfo
 from django import forms
 from django.conf import settings
 
-from .fields import PintFormField, PintTimeFormField
+from .fields import (
+    DISTANCE_UNITS,
+    WEIGHT_UNITS,
+    PintFormField,
+    PintTimeFormField,
+)
 from .models import CardioExercise, Movement, StrengthExercise, Workout
 
 
@@ -66,7 +71,7 @@ class MovementForm(forms.ModelForm):
 
 
 class CardioExerciseForm(forms.ModelForm):
-    distance = PintFormField(required=False)
+    distance = PintFormField(DISTANCE_UNITS, required=False)
     duration = PintTimeFormField(required=False)
 
     class Meta:
@@ -85,7 +90,7 @@ class CardioExerciseForm(forms.ModelForm):
 
 
 class StrengthExerciseForm(forms.ModelForm):
-    weight = PintFormField(required=False)
+    weight = PintFormField(WEIGHT_UNITS, required=False)
 
     class Meta:
         model = StrengthExercise

@@ -5,6 +5,8 @@ from django import forms
 
 from unsphere.units import u
 from workouts.fields import (
+    DISTANCE_UNITS,
+    WEIGHT_UNITS,
     PintFormField,
     PintTimeFormField,
     PintTimeWidget,
@@ -16,33 +18,41 @@ from workouts.fields import (
 
 
 def test_pintformfield_compress_valid():
-    field = PintFormField(required=False)
-    assert field.compress([Decimal("5"), "miles"]) == u("5 miles")
+    field = PintFormField(DISTANCE_UNITS, required=False)
+    assert field.compress([Decimal("5"), "mile"]) == u("5 miles")
 
 
 def test_pintformfield_compress_empty_returns_none():
-    field = PintFormField(required=False)
+    field = PintFormField(DISTANCE_UNITS, required=False)
     assert field.compress([None, ""]) is None
 
 
 def test_pintformfield_compress_missing_unit_errors():
-    field = PintFormField(required=False)
+    field = PintFormField(DISTANCE_UNITS, required=False)
     with pytest.raises(forms.ValidationError, match="unit"):
         field.compress([Decimal("5"), ""])
 
 
-def test_pintformfield_compress_unknown_unit_errors():
-    field = PintFormField(required=False)
-    with pytest.raises(forms.ValidationError, match="not a recognized unit"):
-        field.compress([Decimal("5"), "zorkmids"])
+def test_pintformfield_compress_disallowed_unit_errors():
+    # A weight unit is not selectable on a distance field.
+    field = PintFormField(DISTANCE_UNITS, required=False)
+    with pytest.raises(forms.ValidationError, match="unit"):
+        field.compress([Decimal("5"), "pound"])
+
+
+def test_pintformfield_choices_match_unit_set():
+    distance = PintFormField(DISTANCE_UNITS, required=False)
+    assert distance.allowed_units == {"mile", "foot", "kilometer", "meter"}
+    weight = PintFormField(WEIGHT_UNITS, required=False)
+    assert weight.allowed_units == {"pound", "kilogram"}
 
 
 def test_pintwidget_decompress_quantity():
-    assert PintWidget().decompress(u("3 mile")) == [3.0, "mile"]
+    assert PintWidget(DISTANCE_UNITS).decompress(u("3 mile")) == [3.0, "mile"]
 
 
 def test_pintwidget_decompress_empty():
-    assert PintWidget().decompress(None) == [None, ""]
+    assert PintWidget(DISTANCE_UNITS).decompress(None) == [None, ""]
 
 
 # --- PintTimeFormField ------------------------------------------------------

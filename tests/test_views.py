@@ -172,7 +172,7 @@ def test_cardio_add_happy_path(auth_client, workout, cardio_movement):
         {
             "movement": cardio_movement.pk,
             "distance_0": "5",
-            "distance_1": "miles",
+            "distance_1": "mile",
             "duration_0": "",
             "duration_1": "",
             "notes": "",
@@ -214,7 +214,7 @@ def test_strength_add_happy_path(auth_client, workout, strength_movement):
             "sets": "3",
             "reps": "10",
             "weight_0": "135",
-            "weight_1": "lbs",
+            "weight_1": "pound",
             "notes": "",
         },
     )
@@ -237,7 +237,7 @@ def test_cardio_edit(auth_client, workout, cardio_movement):
         {
             "movement": cardio_movement.pk,
             "distance_0": "6",
-            "distance_1": "miles",
+            "distance_1": "mile",
             "duration_0": "",
             "duration_1": "",
             "notes": "longer",

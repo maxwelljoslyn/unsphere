@@ -39,7 +39,7 @@ def test_cardio_form_valid_with_distance_only(cardio_movement):
         data={
             "movement": cardio_movement.pk,
             "distance_0": "5",
-            "distance_1": "miles",
+            "distance_1": "mile",
             "duration_0": "",
             "duration_1": "",
             "notes": "",

@@ -43,12 +43,12 @@ class PintField(models.CharField):
 
 
 class PintWidget(forms.MultiWidget):
-    """[magnitude: number input, unit: text input]"""
+    """[magnitude: number input, unit: select of allowed units]"""
 
-    def __init__(self, attrs=None):
+    def __init__(self, unit_choices, attrs=None):
         widgets = [
             forms.NumberInput(attrs={"step": "any", "min": "0"}),
-            forms.TextInput(attrs={"placeholder": "unit"}),
+            forms.Select(choices=unit_choices),
         ]
         super().__init__(widgets, attrs)
 
@@ -105,17 +105,38 @@ class PintTimeWidget(forms.MultiWidget):
 
 
 # ---------------------------------------------------------------------------
+# Allowed units
+# ---------------------------------------------------------------------------
+
+# Each choice is (value, label). The value is the canonical pint unit name that
+# PintWidget.decompress emits for an existing quantity, so stored values
+# round-trip to the matching <option>. Labels are the friendly forms.
+DISTANCE_UNITS = [
+    ("mile", "miles"),
+    ("foot", "feet"),
+    ("kilometer", "km"),
+    ("meter", "meters"),
+]
+
+WEIGHT_UNITS = [
+    ("pound", "lbs"),
+    ("kilogram", "kg"),
+]
+
+
+# ---------------------------------------------------------------------------
 # Form fields
 # ---------------------------------------------------------------------------
 
 
 class PintFormField(forms.MultiValueField):
-    widget = PintWidget
-
-    def __init__(self, *args, **kwargs):
+    def __init__(self, unit_choices, *args, **kwargs):
+        self.allowed_units = {value for value, _label in unit_choices}
+        choices = [("", "unit")] + list(unit_choices)
+        self.widget = PintWidget(choices)
         fields = [
-            forms.DecimalField(min_value=0),
-            forms.CharField(),
+            forms.DecimalField(min_value=0, required=False),
+            forms.ChoiceField(choices=choices, required=False),
         ]
         kwargs.setdefault("require_all_fields", False)
         super().__init__(fields=fields, *args, **kwargs)
@@ -125,14 +146,9 @@ class PintFormField(forms.MultiValueField):
             return None
         magnitude = data_list[0]
         unit = data_list[1].strip() if len(data_list) > 1 and data_list[1] else ""
-        if not unit:
-            raise forms.ValidationError("Enter a unit (e.g. 'miles', 'lbs').")
-        try:
-            return u(f"{magnitude} {unit}")
-        except Exception:
-            raise forms.ValidationError(
-                f"'{unit}' is not a recognized unit. Try 'miles', 'feet', 'lbs', 'kg', etc."
-            )
+        if unit not in self.allowed_units:
+            raise forms.ValidationError("Select a unit.")
+        return u(f"{magnitude} {unit}")
 
 
 class PintTimeFormField(forms.MultiValueField):

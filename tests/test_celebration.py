@@ -37,7 +37,7 @@ def test_htmx_earn_injects_oob_celebration_and_trigger(auth_client, user):
         {
             "movement": movement.pk,
             "distance_0": "2",
-            "distance_1": "miles",
+            "distance_1": "mile",
             "duration_0": "",
             "duration_1": "",
             "notes": "",
