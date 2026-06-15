@@ -17,3 +17,6 @@ wheels/
 
 # collectstatic output
 /staticfiles/
+
+# Playwright MCP QA artifacts
+.playwright-mcp/
