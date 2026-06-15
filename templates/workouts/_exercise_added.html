@@ -6,8 +6,12 @@
           hx-target="#add-exercise-area"
           hx-swap="outerHTML">Add Strength Exercise</button>
 </div>
-{% if ex_type == "cardio" %}
-<li hx-swap-oob="beforeend:#exercise-list">{% include "workouts/_cardio_exercise.html" %}</li>
-{% else %}
-<li hx-swap-oob="beforeend:#exercise-list">{% include "workouts/_strength_exercise.html" %}</li>
-{% endif %}
+{% comment %}
+The new row is delivered as an out-of-band append to #exercise-list. A
+positional OOB (beforeend:) swaps in the *content* of the hx-swap-oob element
+and discards the wrapper, so the <li> is wrapped in a plain <div> carrying the
+directive: htmx appends the wrapper's content (the clean <li>) to the list.
+(The wrapper must be a normal element — a bare <li> wrapper makes htmx append
+the row's inner nodes instead, and a <template> appends nothing.)
+{% endcomment %}
+<div hx-swap-oob="beforeend:#exercise-list">{% if ex_type == "cardio" %}{% include "workouts/_cardio_exercise.html" %}{% else %}{% include "workouts/_strength_exercise.html" %}{% endif %}</div>
