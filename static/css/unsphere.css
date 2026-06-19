@@ -38,7 +38,10 @@
 /* ----------------------------------------------------------------- Reset-ish */
 *, *::before, *::after { box-sizing: border-box; }
 
-html { -webkit-text-size-adjust: 100%; }
+/* Reserve the vertical scrollbar's gutter on every page, scrolling or not, so
+   short pages (login) and long ones (workout list) share the same content width
+   — otherwise the centred nav and container jump when the scrollbar appears. */
+html { -webkit-text-size-adjust: 100%; scrollbar-gutter: stable; }
 
 body {
   margin: 0;
