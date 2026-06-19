@@ -56,31 +56,25 @@
       80%  { opacity: 1; transform: translateY(0); }
       100% { opacity: 0; transform: translateY(-8px); }
     }
-    /* Swap animation for the nav gem count: the old value shrinks to nothing,
-       then the new value grows in from nothing in the same spot. JS builds the
-       [old, new] pair when the count changes; the two are stacked in one grid
-       cell so they share a place, and the count collapses back to a plain
-       number once the grow finishes. Keyframe animations (not transitions) so
+    /* Swap animation for the nav gem count: the old value fades out and the new
+       value fades in over the same spot. JS builds the [old, new] pair when the
+       count changes; the two are stacked in one grid cell so they share a place,
+       and the count collapses back to a plain number once the fade-in finishes.
+       Opacity only — no movement — so it stays calm (and is gentle enough to keep
+       under prefers-reduced-motion). Keyframe animations (not transitions) so
        they reliably play on these freshly inserted nodes. */
     .gem-count { display: inline-block; vertical-align: baseline; }
     .gem-swap { display: inline-grid; }
-    .gem-swap > span {
-      grid-area: 1 / 1;        /* stack both values in the same cell */
-      transform-origin: center;
+    .gem-swap > span { grid-area: 1 / 1; }  /* stack both values in the same cell */
+    .gem-swap .gem-old { animation: gem-fade-out 200ms ease-in forwards; }
+    .gem-swap .gem-new { animation: gem-fade-in 200ms ease-out 200ms both; }
+    @keyframes gem-fade-out {
+      from { opacity: 1; }
+      to   { opacity: 0; }
     }
-    .gem-swap .gem-old { animation: gem-shrink 300ms ease-in forwards; }
-    .gem-swap .gem-new { animation: gem-grow 300ms ease-out 300ms both; }
-    @keyframes gem-shrink {
-      from { transform: scale(1); opacity: 1; }
-      to   { transform: scale(0); opacity: 0; }
-    }
-    @keyframes gem-grow {
-      from { transform: scale(0); opacity: 0; }
-      to   { transform: scale(1); opacity: 1; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .gem-swap .gem-old { display: none; }
-      .gem-swap .gem-new { animation: none; }
+    @keyframes gem-fade-in {
+      from { opacity: 0; }
+      to   { opacity: 1; }
     }
   </style>
   <script src="https://unpkg.com/htmx.org@2.0.4/dist/htmx.min.js"></script>
@@ -255,18 +249,16 @@
 </script>
 <div id="gem-toast" aria-live="polite"></div>
 <script>
-  // Odometer roll for the nav gem count. GemMiddleware updates #nav-gems via an
-  // htmx out-of-band swap; rather than depend on a specific htmx event, a
+  // Crossfade for the nav gem count. GemMiddleware updates #nav-gems via an htmx
+  // out-of-band swap; rather than depend on a specific htmx event, a
   // MutationObserver watches #nav-gems for the count actually changing and
-  // animates the transition (old slides up and out, new rises from the bottom).
-  // The gems themselves are already in the ledger and the swap has set the new
-  // text — the roll is pure decoration, so any failure just shows the new value.
+  // animates the transition (old value fades out, new value fades in). The gems
+  // themselves are already in the ledger and the swap has set the new text — the
+  // fade is pure decoration, so any failure just shows the new value.
   (function () {
-    var ROLL_MS = 600; // shrink (300ms) + grow (300ms)
+    var ROLL_MS = 400; // fade-out (200ms) + fade-in (200ms)
     var nav = document.getElementById("nav-gems");
     if (!nav || typeof MutationObserver === "undefined") return;
-    var reduce = window.matchMedia
-      && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     function countEl() { return nav.querySelector(".gem-count"); }
     function readCount() {
@@ -284,10 +276,9 @@
     function roll(oldVal, newVal) {
       var el = countEl();
       if (!el) return;
-      if (reduce) { el.textContent = newVal; return; }
 
       animating = true;
-      // Stack [old, new]; CSS shrinks the old value out, then grows the new one
+      // Stack [old, new]; CSS fades the old value out, then fades the new one
       // in. The animations play on insert (fresh nodes).
       el.innerHTML =
         '<span class="gem-swap"><span class="gem-old"></span><span class="gem-new"></span></span>';
@@ -302,7 +293,7 @@
         el.textContent = newVal; // back to a plain, clean number
         animating = false;
       }
-      // The new value finishes last; collapse when its grow ends.
+      // The new value finishes last; collapse when its fade-in ends.
       swap.children[1].addEventListener("animationend", collapse, { once: true });
       // Fallback in case animationend never fires (e.g. tab backgrounded).
       setTimeout(collapse, ROLL_MS + 120);
