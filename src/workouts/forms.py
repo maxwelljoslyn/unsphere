@@ -97,12 +97,6 @@ class CardioExerciseForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["movement"].queryset = Movement.objects.filter(kind=Movement.CARDIO)
 
-    def clean(self):
-        cleaned = super().clean()
-        if not cleaned.get("distance") and not cleaned.get("duration"):
-            raise forms.ValidationError("Enter at least one of distance or duration.")
-        return cleaned
-
 
 class StrengthExerciseForm(forms.ModelForm):
     weight = PintFormField(WEIGHT_UNITS, required=False)

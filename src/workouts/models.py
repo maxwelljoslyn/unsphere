@@ -1,4 +1,3 @@
-from django.core.exceptions import ValidationError
 from django.db import models
 from django.conf import settings
 
@@ -67,12 +66,9 @@ class CardioExercise(Exercise):
                 condition=models.Q(distance__isnull=False)
                 | models.Q(duration__isnull=False),
                 name="cardio_exercise_requires_distance_or_duration",
+                violation_error_message="Enter at least one of distance or duration.",
             )
         ]
-
-    def clean(self):
-        if self.distance is None and self.duration is None:
-            raise ValidationError("At least one of distance or duration is required.")
 
     def __str__(self):
         parts = [str(self.movement)]

@@ -11,10 +11,13 @@ def cardio_movement(db):
 
 
 @pytest.mark.django_db
-def test_cardio_model_clean_requires_distance_or_duration(cardio_movement):
+def test_cardio_model_validation_requires_distance_or_duration(cardio_movement):
+    # The rule lives on the CheckConstraint; full_clean() (used by ModelForm and
+    # any non-form path that calls it) surfaces the friendly message.
     ex = CardioExercise(movement=cardio_movement)
-    with pytest.raises(ValidationError):
-        ex.clean()
+    with pytest.raises(ValidationError) as exc_info:
+        ex.full_clean()
+    assert "at least one of distance or duration" in str(exc_info.value).lower()
 
 
 @pytest.mark.django_db
