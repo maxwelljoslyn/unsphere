@@ -121,7 +121,7 @@
     {# unlock fills it. The gem readout sits just before logout. #}
     {% if has_achievements %}{% include "achievements/_nav_achievements_link.html" %}{% else %}<a id="nav-achievements-link"></a>{% endif %}
     <a href="{% url 'feedback' %}">Feedback</a>
-    <a id="nav-gems" class="gem-pill" href="{% url 'gem-list' %}" title="Gems">{% if gem_balance %}{% include "gems/_nav_gems.html" %}{% endif %}</a>
+    <a id="nav-gems" class="gem-pill" href="{% url 'gem-list' %}" title="Gems">{% if has_unlocked_gems %}{% include "gems/_nav_gems.html" %}{% endif %}</a>
     <form method="post" action="{% url 'logout' %}" style="display:inline">
       {% csrf_token %}
       <button type="submit">Log out ({{ user.username }})</button>
