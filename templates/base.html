@@ -119,18 +119,20 @@
     <span class="nav-logo">Unsphere</span>
     <span class="nav-tagline">Prepare your spirit,<br>then unsphere it</span>
   </div>
-  <a href="{% url 'workout-list' %}">Workouts</a>
-  <a href="{% url 'movement-list' %}">Movements</a>
-  {# Achievements link and gem readout are direct nav children. Each carries the #}
-  {# id HTMX swaps into; an empty placeholder holds the spot (hidden via :empty) #}
-  {# until the first unlock fills it. The gem readout sits just before logout. #}
-  {% if has_achievements %}{% include "achievements/_nav_achievements_link.html" %}{% else %}<a id="nav-achievements-link"></a>{% endif %}
-  <a href="{% url 'feedback' %}">Feedback</a>
-  <span id="nav-gems" class="gem-pill" title="Gems">{% if gem_balance %}{% include "gems/_nav_gems.html" %}{% endif %}</span>
-  <form method="post" action="{% url 'logout' %}" style="display:inline">
-    {% csrf_token %}
-    <button type="submit">Log out ({{ user.username }})</button>
-  </form>
+  <div class="nav-links">
+    <a href="{% url 'workout-list' %}">Workouts</a>
+    <a href="{% url 'movement-list' %}">Movements</a>
+    {# Achievements link and gem readout each carry the id HTMX swaps into; an #}
+    {# empty placeholder holds the spot (hidden via :empty) until the first #}
+    {# unlock fills it. The gem readout sits just before logout. #}
+    {% if has_achievements %}{% include "achievements/_nav_achievements_link.html" %}{% else %}<a id="nav-achievements-link"></a>{% endif %}
+    <a href="{% url 'feedback' %}">Feedback</a>
+    <span id="nav-gems" class="gem-pill" title="Gems">{% if gem_balance %}{% include "gems/_nav_gems.html" %}{% endif %}</span>
+    <form method="post" action="{% url 'logout' %}" style="display:inline">
+      {% csrf_token %}
+      <button type="submit">Log out ({{ user.username }})</button>
+    </form>
+  </div>
 </nav>
 <hr>
 {% else %}
@@ -139,8 +141,10 @@
     <span class="nav-logo">Unsphere</span>
     <span class="nav-tagline">Prepare your spirit,<br>then unsphere it</span>
   </div>
-  <a href="{% url 'login' %}">Log in</a>
-  <a href="{% url 'register' %}">Register</a>
+  <div class="nav-links">
+    <a href="{% url 'login' %}">Log in</a>
+    <a href="{% url 'register' %}">Register</a>
+  </div>
 </nav>
 <hr>
 {% endif %}

@@ -127,6 +127,7 @@ nav {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
+  justify-content: space-between;
   gap: 0.15rem 0.55rem;
   background: var(--surface);
   border: var(--b) solid var(--ink);
@@ -135,16 +136,38 @@ nav {
   font-family: var(--font-display);
   font-weight: 700;
 }
-/* The wordmark anchors the left of the bar; its auto right-margin pushes every
-   other nav item (links, gem readout, logout) to the right edge, with logout
-   landing last. The tagline sits beneath the logo in muted italic, broken to
-   two short lines so the brand stays narrow. */
+/* The bar has exactly two flex children: the wordmark and the controls group.
+   space-between pins the wordmark left and the controls right when they fit on
+   one line. When they don't, the whole controls group drops to its own line and
+   wraps internally into tidy left-aligned rows — so no single button is ever
+   orphaned out to the side. The tagline sits beneath the logo in muted italic,
+   broken to two short lines so the brand stays narrow. */
 .nav-brand {
-  margin-right: auto;
   display: flex;
   flex-direction: column;
   gap: 0.05rem;
   line-height: 1;
+}
+.nav-links {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.55rem;
+}
+/* Once the bar is too narrow to hold the wordmark and the controls side by side,
+   the controls drop onto their own line. At that point give the wordmark the
+   full first line to itself and center it, so the brand sits centered above the
+   button rows rather than hugging the left edge. The 52rem cutoff is roughly
+   where the (longer) signed-in control set stops fitting beside the wordmark. */
+@media (max-width: 52rem) {
+  .nav-brand {
+    flex-basis: 100%;
+    align-items: center;
+    text-align: center;
+  }
+  /* Center the button rows too, so they sit symmetrically under the centered
+     wordmark instead of hugging the left edge. */
+  .nav-links { justify-content: center; }
 }
 .nav-logo {
   font-family: var(--font-display);
