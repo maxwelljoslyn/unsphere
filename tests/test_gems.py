@@ -145,6 +145,60 @@ def test_spend_does_not_lower_the_high_water_mark(gem_registry, django_user_mode
 
 
 # ---------------------------------------------------------------------------
+# Ledger page (gem-list view)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+def test_gem_list_requires_login(client):
+    from django.urls import reverse
+
+    resp = client.get(reverse("gem-list"))
+    assert resp.status_code == 302
+    assert "/accounts/login/" in resp.url
+
+
+@pytest.mark.django_db
+def test_gem_list_no_gems_is_not_found(client, django_user_model):
+    from django.urls import reverse
+
+    user = django_user_model.objects.create_user(username="broke", password="x")
+    client.force_login(user)
+    # A user who has never earned a gem hasn't unlocked the pill in the nav, so
+    # the page must 404 to match, rather than show an empty ledger they have no
+    # link to.
+    assert client.get(reverse("gem-list")).status_code == 404
+
+
+@pytest.mark.django_db
+def test_gem_list_shown_when_user_has_gems(client, django_user_model):
+    from django.urls import reverse
+
+    user = django_user_model.objects.create_user(username="rich", password="x")
+    GemTransaction.objects.create(
+        user=user, amount=3, rule_key="seed", category="cardio"
+    )
+    client.force_login(user)
+    assert client.get(reverse("gem-list")).status_code == 200
+
+
+@pytest.mark.django_db
+def test_gem_list_still_shown_when_balance_fully_spent(client, django_user_model):
+    from django.urls import reverse
+
+    user = django_user_model.objects.create_user(username="spent", password="x")
+    GemTransaction.objects.create(
+        user=user, amount=3, rule_key="seed", category="cardio"
+    )
+    GemTransaction.objects.create(user=user, amount=-3)
+    client.force_login(user)
+    # Balance is zero but the user has earned gems before, so the page stays
+    # reachable — eligibility tracks lifetime earnings, not the spendable
+    # balance (the nav pill likewise stays visible, reading 0).
+    assert client.get(reverse("gem-list")).status_code == 200
+
+
+# ---------------------------------------------------------------------------
 # Seed rules (against the real global registry)
 # ---------------------------------------------------------------------------
 
