@@ -115,6 +115,10 @@
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
 {% if user.is_authenticated %}
 <nav>
+  <div class="nav-brand">
+    <span class="nav-logo">Unsphere</span>
+    <span class="nav-tagline">Prepare your spirit,<br>then unsphere it</span>
+  </div>
   <a href="{% url 'workout-list' %}">Workouts</a>
   <a href="{% url 'movement-list' %}">Movements</a>
   {# Achievements link and gem readout are direct nav children. Each carries the #}
@@ -131,6 +135,10 @@
 <hr>
 {% else %}
 <nav>
+  <div class="nav-brand">
+    <span class="nav-logo">Unsphere</span>
+    <span class="nav-tagline">Prepare your spirit,<br>then unsphere it</span>
+  </div>
   <a href="{% url 'login' %}">Log in</a>
   <a href="{% url 'register' %}">Register</a>
 </nav>
@@ -311,9 +319,5 @@
   })();
 </script>
 <main class="container">{% block content %}{% endblock %}</main>
-<footer class="site-footer">
-  <span class="footer-logo">Unsphere</span>
-  <span class="footer-tagline">Prepare your spirit, then unsphere it</span>
-</footer>
 </body>
 </html>

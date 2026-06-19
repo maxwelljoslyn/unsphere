@@ -132,6 +132,33 @@ nav {
   font-family: var(--font-display);
   font-weight: 700;
 }
+/* The wordmark anchors the left of the bar; its auto right-margin pushes every
+   other nav item (links, gem readout, logout) to the right edge, with logout
+   landing last. The tagline sits beneath the logo in muted italic, broken to
+   two short lines so the brand stays narrow. */
+.nav-brand {
+  margin-right: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  line-height: 1;
+}
+.nav-logo {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.4rem;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--ink);
+}
+.nav-tagline {
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+  font-weight: 400;
+  font-style: italic;
+  line-height: 1.15;
+  color: var(--ink-soft);
+}
 /* Every nav control — the section links and the logout button — reads as the
    same small sage chip, matching "New Workout". They carry their own borders
    and offset shadows, so the bar needs no "|" separators between them; the
@@ -369,9 +396,12 @@ textarea:focus {
   transform: translate(-2px, -2px);
   box-shadow: var(--shadow-lg);
 }
-/* Row action links/buttons drift to the right edge of their card. */
+/* Row action links/buttons drift to the right edge of their card. When a row
+   has several actions (e.g. Edit + Delete), only the first absorbs the free
+   space so the whole cluster sits together at the right edge. */
 .container > ul > li > a:not(:first-child),
 #exercise-list > li button { margin-left: auto; }
+.container > ul > li > a:not(:first-child) ~ a,
 #exercise-list > li button + button { margin-left: 0.4rem; }
 /* Make the main link of a workout row read as the row's title. */
 .container > ul > li > a:first-child {
@@ -617,37 +647,3 @@ time { font-variant-numeric: tabular-nums; }
 .kind-chip--cardio   { background: var(--peri-soft); }
 .kind-chip--strength { background: var(--coral-soft); }
 
-/* ------------------------------------------------------------------- Footer */
-/* Mirrors the nav bar: a bordered, shadowed cream card centred under the
-   content. The wordmark is the display face with a coral underline echoing the
-   h1 flourish; the tagline sits beneath it in the muted ink. */
-.site-footer {
-  width: fit-content;
-  max-width: 60rem;
-  margin: 3rem auto 1.5rem;
-  padding: 1rem 1.6rem;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem 0.85rem;
-  text-align: center;
-  background: var(--surface);
-  border: var(--b) solid var(--ink);
-  border-radius: var(--r);
-  box-shadow: var(--shadow);
-}
-.footer-logo {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 1.9rem;
-  letter-spacing: -0.02em;
-  line-height: 1;
-  color: var(--ink);
-}
-.footer-tagline {
-  font-family: var(--font-body);
-  font-size: 0.95rem;
-  font-style: italic;
-  color: var(--ink-soft);
-}
