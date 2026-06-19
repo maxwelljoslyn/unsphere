@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Gems{% endblock %}
+{% block content %}
+<h1>Gems</h1>
+<p>You have <strong>{{ gem_balance|default:0 }}</strong>&nbsp;💎 from {{ txns|length }} transaction{{ txns|length|pluralize }}.</p>
+{% if txns %}
+<ul id="gem-list">
+{% for t in txns %}
+  <li>
+    <span class="gem-txn-amount">{{ t.signed }}&nbsp;💎</span>
+    <span class="gem-txn-source">{{ t.source }}{% if t.category %} <span class="gem-txn-category">({{ t.category }})</span>{% endif %}</span>
+    <time class="gem-txn-when" datetime="{{ t.created_at|date:'c' }}" data-localize>{{ t.created_at|date:"M j, Y, H:i" }} UTC</time>
+  </li>
+{% endfor %}
+</ul>
+{% else %}
+<p>No gem transactions yet. Save a workout to start earning&nbsp;💎.</p>
+{% endif %}
+{% endblock %}

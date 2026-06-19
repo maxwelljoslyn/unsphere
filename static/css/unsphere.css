@@ -231,6 +231,12 @@ nav .gem-pill {
   white-space: nowrap;
 }
 
+/* Gem ledger page: reuse the generic .container > ul card rows; just bolden the
+   amount and push the timestamp to the right edge of each row. */
+.gem-txn-amount { font-family: var(--font-display); font-weight: 700; }
+.gem-txn-category { color: var(--ink-soft); }
+.gem-txn-when { margin-left: auto; color: var(--ink-soft); font-size: 0.85rem; }
+
 /* The achievements link and gem readout are direct nav children carrying the id
    HTMX swaps into, so they're laid out exactly like the other nav items. Each
    is present from the start as a swap target — empty until the first unlock —
