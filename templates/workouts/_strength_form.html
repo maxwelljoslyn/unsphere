@@ -1,8 +1,5 @@
 <div id="add-exercise-area">
   <h3>Add Strength Exercise</h3>
-  {% if form.non_field_errors %}
-    <ul>{% for e in form.non_field_errors %}<li>{{ e }}</li>{% endfor %}</ul>
-  {% endif %}
   <form hx-post="{% url 'strength-exercise-add' workout.pk %}"
         hx-target="#add-exercise-area"
         hx-swap="outerHTML">

@@ -2,9 +2,6 @@
 {% block title %}Log in{% endblock %}
 {% block content %}
 <h1>Log in</h1>
-{% if form.non_field_errors %}
-  <ul>{% for e in form.non_field_errors %}<li>{{ e }}</li>{% endfor %}</ul>
-{% endif %}
 <form method="post">
   {% csrf_token %}
   {{ form.as_p }}
