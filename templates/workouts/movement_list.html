@@ -5,7 +5,7 @@
 <p><a href="{% url 'movement-create' %}">New Movement</a></p>
 <ul>
 {% for movement in movements %}
-  <li>{{ movement.name }} ({{ movement.get_kind_display }})
+  <li>{{ movement.name }} <span class="kind-chip kind-chip--{{ movement.kind }}">{{ movement.get_kind_display }}</span>
     <a href="{% url 'movement-edit' movement.pk %}">Edit</a>
     <a href="{% url 'movement-delete' movement.pk %}">Delete</a>
   </li>

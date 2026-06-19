@@ -597,6 +597,26 @@ time { font-variant-numeric: tabular-nums; }
 .saved-badge { background: var(--sage-soft); }
 #workout-status .hint { color: var(--ink-soft); font-size: 0.85rem; margin-top: 0.25rem; }
 
+/* ---------------------------------------------------- Movement kind chips */
+/* Same pill vocabulary as the draft/saved status badges, but a distinct
+   colour pair so the two never read as the same thing: cardio takes the cool
+   periwinkle (breath, endurance), strength the warm coral (exertion, iron).
+   These are labels, not controls — no shadow, no hover. */
+.kind-chip {
+  display: inline-block;
+  border: var(--b) solid var(--ink);
+  border-radius: 999px;
+  padding: 0.1rem 0.6rem;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+.kind-chip--cardio   { background: var(--peri-soft); }
+.kind-chip--strength { background: var(--coral-soft); }
+
 /* ------------------------------------------------------------------- Footer */
 /* Mirrors the nav bar: a bordered, shadowed cream card centred under the
    content. The wordmark is the display face with a coral underline echoing the
