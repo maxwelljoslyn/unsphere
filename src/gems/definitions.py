@@ -70,23 +70,21 @@ def _active_days(user) -> int:
 
 GemRuleDef(
     key="cardio_distance",
-    name="Cardio distance",
+    name="+1 gem per cumulative mile of cardio",
     category="cardio",
-    # 1 gem per cumulative mile of cardio.
     entitled=lambda user: int(math.floor(_total_cardio_miles(user))),
 )
 
 GemRuleDef(
     key="cardio_duration",
-    name="Cardio duration",
+    name="+1 gem per cumulative 10 minutes of cardio",
     category="cardio",
-    # 1 gem per cumulative 10 minutes of cardio.
     entitled=lambda user: int(_total_cardio_minutes(user) // 10),
 )
 
 GemRuleDef(
     key="active_days",
-    name="Active days",
+    name="+1 gem per day where you worked out at least once",
     category="consistency",
     # 1 gem per distinct local calendar day with a workout.
     entitled=_active_days,
