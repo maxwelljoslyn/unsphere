@@ -41,12 +41,19 @@ def _has_strength(user) -> bool:
     ).exists()
 
 
-def _has_gems(user) -> bool:
+def _has_earned_n_gems(user, n) -> bool:
+    """Tracks lifetime gems, not current spendable balance.
+    Once earned, the achievement stays earned even if the user later spends all their gems."""
     from gems.middleware import lifetime_gems
 
-    # Lifetime, not spendable balance: once earned, the achievement stays earned
-    # even if the user later spends all their gems.
-    return lifetime_gems(user) >= 1
+    return lifetime_gems(user) >= n
+
+
+# def _has_hoarded_n_gems(user, n) -> bool:
+#     """Tracks current gem balance. Rewards saving up."""
+#     from gems.middleware import gem_balance
+
+#     return gem_balance(user) >= n
 
 
 AchievementDef(
@@ -143,6 +150,69 @@ AchievementDef(
 AchievementDef(
     key="first_gem",
     name="Stats, Gems, and Webs",
-    description="You earned your first gem.",
-    threshold=lambda user: _has_gems(user),
+    description="You gained your first gem.",
+    threshold=lambda user: _has_earned_n_gems(user, 1),
 )
+
+AchievementDef(
+    key="five_gems",
+    name="Breaking Ground",
+    description="You've gained five gems.",
+    threshold=lambda user: _has_earned_n_gems(user, 5),
+)
+
+AchievementDef(
+    key="ten_gems",
+    name="Pay Dirt",
+    description="You've gained ten gems. Don't stop now!",
+    threshold=lambda user: _has_earned_n_gems(user, 10),
+)
+
+AchievementDef(
+    key="twenty_gems",
+    name="Capital Gains",
+    description="You've gained twenty gems. Check out those GAINS.",
+    threshold=lambda user: _has_earned_n_gems(user, 20),
+)
+
+AchievementDef(
+    key="fifty_gems",
+    name="Jackpot",
+    description="You've gained fifty gems!",
+    threshold=lambda user: _has_earned_n_gems(user, 50),
+)
+
+AchievementDef(
+    key="seventy_five_gems",
+    name="Mother Lode",
+    description="You've gained seventy-five gems. Swim in them, if you haven't spent them...",
+    threshold=lambda user: _has_earned_n_gems(user, 75),
+)
+
+AchievementDef(
+    key="one_hundred_gems",
+    name="Dwarfmaxxing",
+    description="You've gained one hundred gems!",
+    threshold=lambda user: _has_earned_n_gems(user, 100),
+)
+
+# AchievementDef(
+#     key="hoard_twenty_five_gems",
+#     name="Thrifty",
+#     description="You've socked away twenty-five gems.",
+#     threshold=lambda user: _has_hoarded_n_gems(user, 25),
+# )
+
+# AchievementDef(
+#     key="hoard_fifty_gems",
+#     name="Goblin Mode",
+#     description="You've stockpiled fifty gems.",
+#     threshold=lambda user: _has_hoarded_n_gems(user, 50),
+# )
+
+# AchievementDef(
+#     key="hoard_one_hundred_gems",
+#     name="Dragon Hoard",
+#     description="You've hoarded one hundred gems!",
+#     threshold=lambda user: _has_hoarded_n_gems(user, 100),
+# )
