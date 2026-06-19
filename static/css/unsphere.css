@@ -120,9 +120,21 @@ strong { font-weight: 800; }
 }
 
 /* ---------------------------------------------------------------------- Nav */
+/* Anchored header: a sticky bar the width of the main content column (centred,
+   matching .container), so it — and the live gem counter it carries — stays on
+   screen as you scroll, including right after an htmx "Save" deep down a workout
+   page where the count animates. z-index keeps it above scrolling content (the
+   gem toast at 1000 and the achievement <dialog> in the top layer still sit above
+   it). It sits flush to the viewport top (top:0) with square top corners: since
+   the bar and the content column are the same width, nothing scrolls beside or
+   above it to peek through — and squaring the top avoids corner notches there.
+   The bottom corners round like every other card. */
 nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
   max-width: 60rem;
-  margin: 1.25rem auto 0;
+  margin: 0 auto;
   padding: 0.7rem 1.1rem;
   display: flex;
   align-items: center;
@@ -131,7 +143,7 @@ nav {
   gap: 0.15rem 0.55rem;
   background: var(--surface);
   border: var(--b) solid var(--ink);
-  border-radius: var(--r);
+  border-radius: 0 0 var(--r) var(--r);
   box-shadow: var(--shadow);
   font-family: var(--font-display);
   font-weight: 700;
@@ -216,9 +228,9 @@ nav button:active {
   box-shadow: 0 0 0 var(--ink);
 }
 
-/* The gem balance is a readout, not a control: a soft, shadowless chip so it
-   reads as information sitting among the buttons rather than something to
-   click. */
+/* The gem pill links to the ledger, so it's a control like the other nav chips
+   (it picks up nav a's border, offset shadow, and hover lift) — but tinted
+   butter instead of sage to set the gem readout apart from the section links. */
 nav .gem-pill {
   font-family: var(--font-display);
   font-weight: 700;
