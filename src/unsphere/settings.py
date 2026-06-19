@@ -118,6 +118,19 @@ STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 # collectstatic writes here; Caddy serves /static/* directly from this dir.
 STATIC_ROOT = BASE_DIR / "staticfiles"
+# Content-hash static filenames so a CSS/JS change yields a new URL and browsers
+# (notably mobile, which caches aggressively) can never serve a stale copy.
+# Only in production: the manifest backend reads staticfiles.json, which exists
+# only after collectstatic, so dev runserver keeps the plain storage.
+if not DEBUG:
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.ManifestStaticFilesStorage",
+        },
+    }
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Production hardening. These only bite when DEBUG is off; in dev they stay
