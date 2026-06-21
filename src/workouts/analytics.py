@@ -23,7 +23,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from django.conf import settings
 from django.utils import timezone
 
-from .models import Workout
+from .models import CardioExercise, StrengthExercise, Workout
 
 
 def _safe_zone(name: str) -> ZoneInfo:
@@ -45,6 +45,20 @@ def _local_day(workout: Workout) -> dt.date:
 def total_confirmed_workouts(user) -> int:
     """How many confirmed workouts the user has logged, all time."""
     return _confirmed(user).count()
+
+
+def total_exercises_logged(user) -> int:
+    """How many exercises the user has logged across confirmed workouts.
+
+    Both cardio and strength exercises count, so a workout with two cardio and
+    one strength movement contributes three. Drafts are excluded, matching every
+    other figure on the dashboard.
+    """
+    confirmed = {"workout__user": user, "workout__confirmed_at__isnull": False}
+    return (
+        CardioExercise.objects.filter(**confirmed).count()
+        + StrengthExercise.objects.filter(**confirmed).count()
+    )
 
 
 def local_workout_days(user) -> set[dt.date]:
@@ -92,6 +106,23 @@ def current_streak(user, today: dt.date | None = None) -> int:
     return streak
 
 
+def workout_day_percentage(user, today: dt.date | None = None) -> int:
+    """Share of days the user has trained, from their first workout to today.
+
+    Distinct training days as a percentage of the inclusive calendar span that
+    starts on the user's first confirmed workout and ends today — a "how often do
+    I actually show up" figure. 0 when there are no workouts. ``today`` is
+    injectable for testing.
+    """
+    days = local_workout_days(user)
+    if not days:
+        return 0
+    if today is None:
+        today = _today_for(user)
+    span = (today - min(days)).days + 1
+    return round(len(days) / span * 100)
+
+
 def cardio_cumulative_series(user) -> list[dict]:
     """Running cumulative cardio totals: lifetime miles and minutes over time.
 
@@ -127,6 +158,20 @@ def cardio_cumulative_series(user) -> list[dict]:
             }
         )
     return series
+
+
+def cardio_lifetime_totals(series: list[dict]) -> dict:
+    """Lifetime cardio miles and hours, read off a cumulative series.
+
+    Takes the output of :func:`cardio_cumulative_series` rather than hitting the
+    database again: the final point already carries the running totals, so the
+    headline tiles and the line charts are computed from exactly the same data
+    in a single pass. Returns zeroes for a user with no cardio.
+    """
+    if not series:
+        return {"miles": 0.0, "hours": 0.0}
+    last = series[-1]
+    return {"miles": last["miles"], "hours": round(last["minutes"] / 60, 1)}
 
 
 def workout_day_counts(user) -> list[dict]:

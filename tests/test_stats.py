@@ -4,7 +4,12 @@ import pytest
 from django.urls import reverse
 
 from workouts import analytics
-from workouts.models import CardioExercise, Movement, Workout
+from workouts.models import (
+    CardioExercise,
+    Movement,
+    StrengthExercise,
+    Workout,
+)
 from unsphere.units import u
 
 UTC = dt.timezone.utc
@@ -29,6 +34,20 @@ def cardio_movement(db):
         name="running", defaults={"kind": Movement.CARDIO}
     )
     return movement
+
+
+@pytest.fixture
+def strength_movement(db):
+    movement, _ = Movement.objects.get_or_create(
+        name="squat", defaults={"kind": Movement.STRENGTH}
+    )
+    return movement
+
+
+def add_strength(workout, movement, *, sets=3, reps=10):
+    return StrengthExercise.objects.create(
+        workout=workout, movement=movement, sets=sets, reps=reps
+    )
 
 
 def make_workout(user, when, *, confirmed=True, timezone="UTC"):
@@ -62,7 +81,11 @@ def test_stats_renders_for_authenticated_user(auth_client):
     resp = auth_client.get(reverse("stats"))
     assert resp.status_code == 200
     assert resp.context["total_workouts"] == 0
+    assert resp.context["total_exercises"] == 0
     assert resp.context["current_streak"] == 0
+    assert resp.context["workout_day_percentage"] == 0
+    assert resp.context["cardio_miles"] == 0.0
+    assert resp.context["cardio_hours"] == 0.0
     assert resp.context["cardio_series"] == []
     assert resp.context["day_counts"] == []
 
@@ -80,6 +103,26 @@ def test_total_counts_only_confirmed(user):
     make_workout(user, dt.datetime(2026, 1, 2, 12, tzinfo=UTC))
     make_workout(user, dt.datetime(2026, 1, 3, 12, tzinfo=UTC), confirmed=False)
     assert analytics.total_confirmed_workouts(user) == 2
+
+
+# --- total_exercises_logged -------------------------------------------------
+
+
+def test_total_exercises_counts_cardio_and_strength(
+    user, cardio_movement, strength_movement
+):
+    w1 = make_workout(user, dt.datetime(2026, 1, 1, 12, tzinfo=UTC))
+    add_cardio(w1, cardio_movement, distance="5 km")
+    add_strength(w1, strength_movement)
+    w2 = make_workout(user, dt.datetime(2026, 1, 2, 12, tzinfo=UTC))
+    add_cardio(w2, cardio_movement, duration="30 min")
+    assert analytics.total_exercises_logged(user) == 3
+
+
+def test_total_exercises_excludes_drafts(user, cardio_movement):
+    draft = make_workout(user, dt.datetime(2026, 1, 1, 12, tzinfo=UTC), confirmed=False)
+    add_cardio(draft, cardio_movement, distance="5 km")
+    assert analytics.total_exercises_logged(user) == 0
 
 
 # --- current_streak ---------------------------------------------------------
@@ -124,6 +167,28 @@ def test_streak_uses_local_day(user):
     assert analytics.current_streak(user, today=dt.date(2026, 6, 20)) == 2
 
 
+# --- workout_day_percentage -------------------------------------------------
+
+
+def test_workout_day_percentage(user):
+    # First workout 2026-06-01, "today" 2026-06-10 → a 10-day inclusive span,
+    # trained on 3 of those days → 30%.
+    for day in (1, 5, 10):
+        make_workout(user, dt.datetime(2026, 6, day, 9, tzinfo=UTC))
+    assert analytics.workout_day_percentage(user, today=dt.date(2026, 6, 10)) == 30
+
+
+def test_workout_day_percentage_perfect(user):
+    # Trained every day in the span → 100%.
+    for day in (1, 2, 3):
+        make_workout(user, dt.datetime(2026, 6, day, 9, tzinfo=UTC))
+    assert analytics.workout_day_percentage(user, today=dt.date(2026, 6, 3)) == 100
+
+
+def test_workout_day_percentage_no_workouts(user):
+    assert analytics.workout_day_percentage(user) == 0
+
+
 # --- cardio_cumulative_series ----------------------------------------------
 
 
@@ -155,6 +220,21 @@ def test_cardio_cumulative_sums_same_day(user, cardio_movement):
     add_cardio(w2, cardio_movement, distance="2 mile")
     series = analytics.cardio_cumulative_series(user)
     assert series == [{"date": "2026-06-01", "miles": 5.0, "minutes": 0.0}]
+
+
+# --- cardio_lifetime_totals -------------------------------------------------
+
+
+def test_cardio_lifetime_totals_reads_series_tail():
+    series = [
+        {"date": "2026-06-01", "miles": 3.0, "minutes": 30.0},
+        {"date": "2026-06-05", "miles": 5.0, "minutes": 150.0},
+    ]
+    assert analytics.cardio_lifetime_totals(series) == {"miles": 5.0, "hours": 2.5}
+
+
+def test_cardio_lifetime_totals_empty_series():
+    assert analytics.cardio_lifetime_totals([]) == {"miles": 0.0, "hours": 0.0}
 
 
 # --- workout_day_counts -----------------------------------------------------

@@ -12,8 +12,24 @@
     <span class="stat-label">Total workout{{ total_workouts|pluralize }}</span>
   </div>
   <div class="stat-tile">
+    <span class="stat-value">{{ total_exercises }}</span>
+    <span class="stat-label">Exercise{{ total_exercises|pluralize }} logged</span>
+  </div>
+  <div class="stat-tile">
     <span class="stat-value">{{ current_streak }}</span>
     <span class="stat-label">Day streak</span>
+  </div>
+  <div class="stat-tile">
+    <span class="stat-value">{{ workout_day_percentage }}%</span>
+    <span class="stat-label">Of days trained</span>
+  </div>
+  <div class="stat-tile">
+    <span class="stat-value">{{ cardio_miles }}</span>
+    <span class="stat-label">Miles of cardio</span>
+  </div>
+  <div class="stat-tile">
+    <span class="stat-value">{{ cardio_hours }}</span>
+    <span class="stat-label">Hours of cardio</span>
   </div>
 </section>
 
