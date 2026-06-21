@@ -155,3 +155,68 @@ def test_resend_confirmation_unknown_user_is_silent(client):
     resp = client.post(reverse("resend-confirmation"), {"username": "ghost"})
     assert resp.status_code == 302
     assert len(mail.outbox) == 0
+
+
+# --- Password reset ---------------------------------------------------------
+
+
+@pytest.mark.django_db
+def test_password_reset_sends_email(client):
+    User.objects.create_user(
+        username="forgot", email="forgot@example.com", password="oldpass123!"
+    )
+    resp = client.post(reverse("password_reset"), {"email": "forgot@example.com"})
+    assert resp.status_code == 302
+    assert resp.url == reverse("password_reset_done")
+    assert len(mail.outbox) == 1
+    assert "forgot@example.com" in mail.outbox[0].to
+
+
+@pytest.mark.django_db
+def test_password_reset_unknown_email_is_silent(client):
+    resp = client.post(reverse("password_reset"), {"email": "nobody@example.com"})
+    assert resp.status_code == 302
+    assert resp.url == reverse("password_reset_done")
+    assert len(mail.outbox) == 0
+
+
+@pytest.mark.django_db
+def test_password_reset_confirm_sets_password_and_confirms_email(client):
+    user = User.objects.create_user(
+        username="resetme", email="reset@example.com", password="oldpass123!"
+    )
+    assert user.email_confirmed is False
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
+    token = default_token_generator.make_token(user)
+
+    # The first GET stores the token in the session and redirects to the
+    # set-password URL (the token in the URL becomes a fixed sentinel).
+    resp = client.get(
+        reverse("password_reset_confirm", kwargs={"uidb64": uid, "token": token})
+    )
+    assert resp.status_code == 302
+
+    resp = client.post(
+        resp.url,
+        {"new_password1": "brandnew456!", "new_password2": "brandnew456!"},
+    )
+    assert resp.status_code == 302
+    assert resp.url == reverse("password_reset_complete")
+
+    user.refresh_from_db()
+    assert user.check_password("brandnew456!")
+    # Completing the reset proves email control, so the account is confirmed too.
+    assert user.email_confirmed is True
+
+
+@pytest.mark.django_db
+def test_password_reset_confirm_invalid_link(client):
+    user = User.objects.create_user(
+        username="resetbad", email="resetbad@example.com", password="oldpass123!"
+    )
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
+    resp = client.get(
+        reverse("password_reset_confirm", kwargs={"uidb64": uid, "token": "bad-token"})
+    )
+    assert resp.status_code == 200
+    assert b"invalid or has expired" in resp.content.lower()

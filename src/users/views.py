@@ -2,6 +2,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login
 from django.contrib.auth.tokens import default_token_generator
+from django.contrib.auth.views import PasswordResetConfirmView
 from django.shortcuts import redirect, render
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
@@ -10,6 +11,25 @@ from .auth_emails import EmailSendError, send_confirmation_email
 from .forms import RegistrationForm
 
 User = get_user_model()
+
+
+class ConfirmingPasswordResetConfirmView(PasswordResetConfirmView):
+    """Django's reset-confirm view, but it also marks the email confirmed.
+
+    Completing a password reset proves control of the account's email address —
+    the same proof account confirmation requires — so anyone who finishes a reset
+    should never then be bounced by the unconfirmed-login gate. Without this, a
+    user who forgot their password *and* never confirmed would reset it and still
+    be unable to log in.
+    """
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        user = form.user
+        if not user.email_confirmed:
+            user.email_confirmed = True
+            user.save(update_fields=["email_confirmed"])
+        return response
 
 
 def register(request):
