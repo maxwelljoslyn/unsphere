@@ -12,4 +12,5 @@ urlpatterns = [
     path("", include("workouts.urls")),
     path("", include("achievements.urls")),
     path("", include("gems.urls")),
+    path("", include("stats.urls")),
 ]

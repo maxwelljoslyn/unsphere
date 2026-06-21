@@ -390,6 +390,29 @@ textarea:focus {
 .messages li.error   { background: var(--coral-soft); }
 .messages li.warning { background: var(--butter-soft); }
 
+/* --------------------------------------------------------------- Card
+   The shared paper-card idiom: surface paper, thick ink border, gentle
+   radius, hard offset shadow. Several components (stat tiles, charts, list
+   rows) currently inline these same rules; this class is the canonical
+   version to backport them onto. */
+.card {
+  background: var(--surface);
+  border: var(--b-thick) solid var(--ink);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  padding: 1rem 1.25rem;
+}
+
+/* ----------------------------------------------------------------- Asides, info boxes, heads up, that kind of thing */
+/* An info box is a card with a butter tint instead of plain paper. Defined
+   after .card so this background wins over the card's surface colour. As a
+   standalone flow block it carries its own bottom margin (unlike cards in a
+   gap-spaced grid). */
+.info {
+  background: var(--butter-soft);
+  margin-bottom: 1.5rem;
+}
+
 /* ------------------------------------------- Generic content lists as cards */
 /* Workout list, movement list, exercise list: stacked "index card" rows.     */
 .container > ul,
@@ -691,3 +714,70 @@ time { font-variant-numeric: tabular-nums; }
 .kind-chip--cardio   { background: var(--peri-soft); }
 .kind-chip--strength { background: var(--coral-soft); }
 
+
+/* ── Stats page ─────────────────────────────────────────────────────────── */
+/* Headline tiles: a couple of big numbers (total workouts, current streak) in
+   the same paper-card idiom as the rest of the app — thick border, hard offset
+   shadow, gentle radius. Auto-fit so 2 tiles sit side by side and wrap on
+   narrow screens. */
+.stat-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.stat-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1.1rem 1.25rem;
+  background: var(--surface);
+  border: var(--b-thick) solid var(--ink);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+}
+.stat-value {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 2.6rem;
+  line-height: 1;
+  color: var(--ink);
+}
+.stat-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* Each chart sits in its own paper card; they stack in a single column. */
+.stat-charts {
+  display: grid;
+  gap: 1.25rem;
+}
+.chart {
+  padding: 1rem 1.1rem;
+  background: var(--surface);
+  border: var(--b-thick) solid var(--ink);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  overflow-x: auto;
+}
+/* Heading rendered by the template (not Plot's own title), so spacing is under
+   our control and sits tight above the chart. */
+.chart-title {
+  margin: 0 0 0.6rem;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.3rem;
+  color: var(--ink);
+}
+.chart-canvas figure { margin: 0; }     /* Plot wraps output in <figure> */
+.chart-empty {
+  margin: 0;
+  padding: 2rem 0;
+  text-align: center;
+  color: var(--ink-soft);
+  font-weight: 600;
+}

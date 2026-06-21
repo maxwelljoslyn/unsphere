@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Stats{% endblock %}
+{% block content %}
+<h1>Stats</h1>
+
+<div class="card info">The Stats page is work in progress. UI niceties and more graphs are TBD.</div>
+
+<section class="stat-tiles">
+  <div class="stat-tile">
+    <span class="stat-value">{{ total_workouts }}</span>
+    <span class="stat-label">Total workout{{ total_workouts|pluralize }}</span>
+  </div>
+  <div class="stat-tile">
+    <span class="stat-value">{{ current_streak }}</span>
+    <span class="stat-label">Day streak</span>
+  </div>
+</section>
+
+<section class="stat-charts">
+  <div class="chart">
+    <h2 class="chart-title">Cardio distance over time</h2>
+    <div id="chart-cardio-distance" class="chart-canvas"></div>
+  </div>
+  <div class="chart">
+    <h2 class="chart-title">Cardio duration over time</h2>
+    <div id="chart-cardio-minutes" class="chart-canvas"></div>
+  </div>
+  <div class="chart">
+    <h2 class="chart-title">Workout frequency</h2>
+    <div id="chart-calendar" class="chart-canvas"></div>
+  </div>
+</section>
+
+{# Hand the server-computed series to the client safely as JSON. #}
+{{ cardio_series|json_script:"cardio-series" }}
+{{ day_counts|json_script:"day-counts" }}
+
+<script type="module">
+  import { renderLine, renderCalendar } from "{% static 'js/charts.js' %}";
+
+  const cardio = JSON.parse(document.getElementById("cardio-series").textContent);
+  const days = JSON.parse(document.getElementById("day-counts").textContent);
+
+  // Cumulative totals: step-after keeps the line flat between workouts and
+  // jumping up on each training day.
+  renderLine(document.getElementById("chart-cardio-distance"), cardio, {
+    x: "date", y: "miles", yLabel: "total miles", curve: "step-after",
+    color: "#2563eb",
+  });
+  renderLine(document.getElementById("chart-cardio-minutes"), cardio, {
+    x: "date", y: "minutes", yLabel: "total minutes", curve: "step-after",
+    color: "#7c3aed",
+  });
+  renderCalendar(document.getElementById("chart-calendar"), days, {
+    date: "date", value: "count",
+  });
+</script>
+{% endblock %}

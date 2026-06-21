@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "workouts",
     "achievements",
     "gems",
+    "stats",
 ]
 
 MIDDLEWARE = [
