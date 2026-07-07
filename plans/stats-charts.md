@@ -1,0 +1,1 @@
+Building a new Stats app (Django + HTMX) with charts via Observable Plot in a reusable charts.js module; just finished styling tweaks to the tiles, cardio line charts, and calendar heatmap. Next: hard-refresh the browser to verify the charts render correctly.
