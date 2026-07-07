@@ -85,7 +85,7 @@ TEMPLATES = [
                 "achievements.context_processors.nav_achievements",
                 "achievements.context_processors.pending_achievements",
                 "gems.context_processors.nav_gems",
-                "unsphere.context_processors.git_commit",
+                "unsphere.context_processors.build_info",
             ],
         },
     },
