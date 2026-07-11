@@ -2,7 +2,7 @@
 {% block title %}Gems{% endblock %}
 {% block content %}
 <h1>Gems</h1>
-<p>You have <strong>{{ gem_balance|default:0 }}</strong>&nbsp;💎 from {{ txns|length }} transaction{{ txns|length|pluralize }}.</p>
+<p>You have <strong>{{ gem_balance|default:0 }}</strong>&nbsp;💎.</p>
 {% if txns %}
 <ul id="gem-list">
 {% for t in txns %}
@@ -14,6 +14,6 @@
 {% endfor %}
 </ul>
 {% else %}
-<p>No gem transactions yet. Save a workout to start earning&nbsp;💎.</p>
+<p>No gems yet. Save a workout to start earning&nbsp;💎.</p>
 {% endif %}
 {% endblock %}
