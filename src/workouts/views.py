@@ -293,7 +293,7 @@ def feedback(request):
             user = request.user
             body = (
                 form.cleaned_data["description"]
-                + f"\n\n---\n*Submitted by {user.username} ({user.email})*"
+                + f"\n\n---\n*Submitted by {user.username}*"
             )
 
             repo = settings.GITHUB_FEEDBACK_REPO
