@@ -24,4 +24,22 @@ fi
 uv sync --frozen
 uv run python manage.py migrate --noinput
 uv run python manage.py collectstatic --noinput
+
+# Install version-controlled systemd unit changes from ops/. Copy only when the
+# installed unit differs, so an unchanged deploy skips the daemon-reload. The
+# unit carries no secrets (config comes from .env via load_dotenv), so
+# overwriting the installed copy never clobbers server-only state. Installed
+# units are world-readable, so cmp needs no sudo; only cp and daemon-reload do.
+units_changed=0
+for unit in unsphere.service; do
+  if ! cmp -s "/home/maxwell/unsphere/ops/$unit" "/etc/systemd/system/$unit"; then
+    sudo cp "/home/maxwell/unsphere/ops/$unit" "/etc/systemd/system/$unit"
+    echo "updated $unit"
+    units_changed=1
+  fi
+done
+if [[ "$units_changed" == 1 ]]; then
+  sudo systemctl daemon-reload
+fi
+
 sudo systemctl restart unsphere.service

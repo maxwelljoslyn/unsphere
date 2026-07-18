@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+import sentry_sdk
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -8,6 +9,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # Load secrets/config from a project-dir .env (chmod 700, gitignored), matching
 # the zingor deployment. Absent in dev, so the in-file defaults apply there.
 load_dotenv(BASE_DIR / ".env")
+
+# Mirrors the zingor Sentry setup. DSN comes from the environment; when it is
+# empty (dev, or before it is configured on the server) init is a no-op.
+sentry_sdk.init(
+    dsn=os.environ.get("SENTRY_DSN", ""),
+    # Add data like request headers and IP for users.
+    # See https://docs.sentry.io/platforms/python/data-management/data-collected/
+    send_default_pii=True,
+    enable_logs=True,
+    traces_sample_rate=1.0,  # 1.0 captures 100% of transactions for tracing
+    profile_session_sample_rate=0.1,  # profile ~10% of sessions to conserve profile hours
+    profile_lifecycle="trace",  # "trace" automatically runs the profiler during an active transaction
+)
 
 
 def _env_bool(name, default):
