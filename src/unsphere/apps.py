@@ -18,6 +18,8 @@ class UnsphereConfig(AppConfig):
                 "PRAGMA cache_size = -64000",  # 64 MB page cache
                 "PRAGMA temp_store = MEMORY",
                 "PRAGMA mmap_size = 134217728",  # 128 MB memory-mapped I/O
+                "PRAGMA journal_size_limit = 67108864",  # cap WAL growth at 64 MB
+                "PRAGMA ignore_check_constraints = OFF",  # enforce CHECK constraints
             ]
             with connection.cursor() as cursor:
                 for pragma in pragmas:
