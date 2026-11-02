@@ -344,3 +344,35 @@ def test_feedback_form_disables_submit_after_click(auth_client):
     html = resp.content.decode()
     assert 'id="feedback-form"' in html
     assert "button.disabled = true" in html
+
+
+# --- Alphabetized <option> lists --------------------------------------------
+
+
+def _option_labels(field):
+    return [str(label) for _value, label in field.field.widget.choices if _value]
+
+
+@pytest.mark.django_db
+def test_movement_options_are_alphabetized():
+    from workouts.forms import CardioExerciseForm, StrengthExerciseForm
+
+    Movement.objects.create(name="zumba", kind=Movement.CARDIO)
+    Movement.objects.create(name="Aqua jogging", kind=Movement.CARDIO)
+    Movement.objects.create(name="Zercher squat", kind=Movement.STRENGTH)
+    Movement.objects.create(name="arnold press", kind=Movement.STRENGTH)
+
+    for form in (CardioExerciseForm(), StrengthExerciseForm()):
+        labels = _option_labels(form["movement"])
+        assert labels == sorted(labels, key=str.lower)
+        assert len(labels) >= 2
+
+
+@pytest.mark.django_db
+def test_unit_options_are_alphabetized():
+    from workouts.forms import CardioExerciseForm, StrengthExerciseForm
+
+    for bound in (CardioExerciseForm()["distance"], StrengthExerciseForm()["weight"]):
+        unit_select = bound.field.widget.widgets[1]
+        labels = [label for value, label in unit_select.choices if value]
+        assert labels == sorted(labels, key=str.lower)

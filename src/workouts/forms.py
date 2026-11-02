@@ -2,6 +2,7 @@ from zoneinfo import ZoneInfo
 
 from django import forms
 from django.conf import settings
+from django.db.models.functions import Lower
 
 from .fields import (
     DISTANCE_UNITS,
@@ -95,7 +96,9 @@ class CardioExerciseForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["movement"].queryset = Movement.objects.filter(kind=Movement.CARDIO)
+        self.fields["movement"].queryset = Movement.objects.filter(
+            kind=Movement.CARDIO
+        ).order_by(Lower("name"))
 
 
 class StrengthExerciseForm(forms.ModelForm):
@@ -109,4 +112,4 @@ class StrengthExerciseForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["movement"].queryset = Movement.objects.filter(
             kind=Movement.STRENGTH
-        )
+        ).order_by(Lower("name"))

@@ -6,6 +6,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
+from django.db.models.functions import Lower
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -240,7 +241,7 @@ def strength_exercise_delete(request, pk):
 
 @login_required
 def movement_list(request):
-    movements = Movement.objects.all().order_by("kind", "name")
+    movements = Movement.objects.all().order_by("kind", Lower("name"))
     return render(request, "workouts/movement_list.html", {"movements": movements})
 
 

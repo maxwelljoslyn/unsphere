@@ -110,17 +110,19 @@ class PintTimeWidget(forms.MultiWidget):
 
 # Each choice is (value, label). The value is the canonical pint unit name that
 # PintWidget.decompress emits for an existing quantity, so stored values
-# round-trip to the matching <option>. Labels are the friendly forms.
+# round-trip to the matching <option>. Labels are the friendly forms, and the
+# lists are kept alphabetized by label (that's the order they appear in the
+# <select>).
 DISTANCE_UNITS = [
-    ("mile", "miles"),
     ("foot", "feet"),
     ("kilometer", "km"),
     ("meter", "meters"),
+    ("mile", "miles"),
 ]
 
 WEIGHT_UNITS = [
-    ("pound", "lbs"),
     ("kilogram", "kg"),
+    ("pound", "lbs"),
 ]
 
 
