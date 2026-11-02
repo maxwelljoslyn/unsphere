@@ -354,7 +354,9 @@ def _rendered_options(html):
     import re
 
     out, group = [], None
-    for m in re.finditer(r'<optgroup label="([^"]*)">|</optgroup>|<option[^>]*>([^<]*)</option>', html):
+    for m in re.finditer(
+        r'<optgroup label="([^"]*)">|</optgroup>|<option[^>]*>([^<]*)</option>', html
+    ):
         if m.group(0) == "</optgroup>":
             group = None
         elif m.group(1) is not None:
@@ -421,8 +423,18 @@ def test_alphabetize_choices():
     from workouts.fields import alphabetize_choices
 
     assert alphabetize_choices(
-        [("", "pick"), ("b", "beta"), ("g", [("z", "Zed"), ("a", "alpha")]), ("A", "Apple")]
-    ) == [("", "pick"), ("A", "Apple"), ("b", "beta"), ("g", [("a", "alpha"), ("z", "Zed")])]
+        [
+            ("", "pick"),
+            ("b", "beta"),
+            ("g", [("z", "Zed"), ("a", "alpha")]),
+            ("A", "Apple"),
+        ]
+    ) == [
+        ("", "pick"),
+        ("A", "Apple"),
+        ("b", "beta"),
+        ("g", [("a", "alpha"), ("z", "Zed")]),
+    ]
 
 
 # --- Duplication ------------------------------------------------------------
@@ -441,7 +453,11 @@ def test_workout_duplicate_copies_exercises_into_new_draft(
         workout=workout, movement=cardio_movement, distance=u("3 mile")
     )
     StrengthExercise.objects.create(
-        workout=workout, movement=strength_movement, sets=3, reps=5, weight=u("100 pound")
+        workout=workout,
+        movement=strength_movement,
+        sets=3,
+        reps=5,
+        weight=u("100 pound"),
     )
 
     resp = auth_client.post(reverse("workout-duplicate", args=[workout.pk]))
