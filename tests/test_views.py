@@ -332,3 +332,15 @@ def test_workout_list_requires_login(client):
     resp = client.get(reverse("workout-list"))
     assert resp.status_code == 302
     assert "/accounts/login/" in resp.url
+
+
+# --- Feedback ---------------------------------------------------------------
+
+
+def test_feedback_form_disables_submit_after_click(auth_client):
+    # Guards against double-submitting (and filing duplicate GitHub issues).
+    resp = auth_client.get(reverse("feedback"))
+    assert resp.status_code == 200
+    html = resp.content.decode()
+    assert 'id="feedback-form"' in html
+    assert "button.disabled = true" in html

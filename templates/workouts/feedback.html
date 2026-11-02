@@ -5,9 +5,29 @@
 <p style="color: var(--ink-soft); margin-bottom: 1rem;">
   Something broken? Have an idea? Let us know and we'll look into it.
 </p>
-<form method="post">
+<form method="post" id="feedback-form">
   {% csrf_token %}
   {{ form.as_p }}
   <button type="submit">Submit Feedback</button>
 </form>
+<script>
+  // Disable the submit button once the form is submitted, so a double click (or
+  // an impatient second tap while GitHub is slow to respond) can't file the
+  // same issue twice. The `submit` event only fires after the browser's own
+  // validation passes, so an invalid form never leaves the button stuck.
+  (function () {
+    var form = document.getElementById("feedback-form");
+    var button = form.querySelector('button[type="submit"]');
+    form.addEventListener("submit", function (e) {
+      if (button.disabled) { e.preventDefault(); return; }
+      button.disabled = true;
+      button.textContent = "Submitting…";
+    });
+    // Re-enable if the page is restored from the back/forward cache.
+    window.addEventListener("pageshow", function () {
+      button.disabled = false;
+      button.textContent = "Submit Feedback";
+    });
+  })();
+</script>
 {% endblock %}
