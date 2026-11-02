@@ -8,7 +8,11 @@
   {% if is_owner %}|
   <a href="{% url 'workout-edit' workout.pk %}">Edit</a> |
   <a href="{% url 'workout-delete' workout.pk %}">Delete</a>
-  {% endif %}
+  {% endif %}|
+  <form method="post" action="{% url 'workout-duplicate' workout.pk %}" style="display:inline">
+    {% csrf_token %}
+    <button type="submit">Duplicate</button>
+  </form>
 </p>
 
 {% if not is_owner %}<p>Logged by <strong>{{ workout.user.username }}</strong></p>{% endif %}

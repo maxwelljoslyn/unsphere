@@ -5,6 +5,7 @@ from urllib.request import Request, urlopen
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.db.models import Q
 from django.db.models.functions import Lower
 from django.http import HttpResponse
@@ -111,6 +112,45 @@ def workout_confirm(request, pk):
     return redirect("workout-detail", pk=workout.pk)
 
 
+def _copy_exercise(ex, workout):
+    """Save a copy of exercise `ex` attached to `workout`, and return it."""
+    ex.pk = None
+    ex._state.adding = True
+    ex.workout = workout
+    ex.save()
+    return ex
+
+
+@login_required
+@require_POST
+def workout_duplicate(request, pk):
+    """Copy a workout (notes and all its exercises) into a new draft.
+
+    The copy is dated now, in the original's zone, since a duplicate is usually
+    "do this routine again today"; the user can adjust the date from the editor.
+    It starts as an unconfirmed draft so nothing is awarded until they confirm.
+    Anyone may duplicate a workout they can see, including another user's
+    confirmed one; the copy always belongs to the requester.
+    """
+    original = get_object_or_404(
+        Workout.objects.filter(Q(confirmed_at__isnull=False) | Q(user=request.user)),
+        pk=pk,
+    )
+    with transaction.atomic():
+        copy = Workout.objects.create(
+            user=request.user,
+            date=timezone.now(),
+            timezone=original.timezone,
+            notes=original.notes,
+        )
+        for ex in original.cardioexercises.all():
+            _copy_exercise(ex, copy)
+        for ex in original.strengthexercises.all():
+            _copy_exercise(ex, copy)
+    messages.success(request, "Workout duplicated. Adjust the date if needed.")
+    return redirect("workout-detail", pk=copy.pk)
+
+
 # ---------------------------------------------------------------------------
 # Exercises (HTMX-driven, on the workout detail page)
 # ---------------------------------------------------------------------------
@@ -174,6 +214,16 @@ def cardio_exercise_delete(request, pk):
 
 
 @login_required
+@require_POST
+def cardio_exercise_duplicate(request, pk):
+    ex = get_object_or_404(CardioExercise, pk=pk, workout__user=request.user)
+    copy = _copy_exercise(ex, ex.workout)
+    return render(
+        request, "workouts/_cardio_exercise.html", {"ex": copy, "is_owner": True}
+    )
+
+
+@login_required
 def strength_exercise_add(request, workout_pk):
     workout = get_object_or_404(Workout, pk=workout_pk, user=request.user)
     if request.method == "POST":
@@ -232,6 +282,16 @@ def strength_exercise_delete(request, pk):
     ex = get_object_or_404(StrengthExercise, pk=pk, workout__user=request.user)
     ex.delete()
     return HttpResponse("")
+
+
+@login_required
+@require_POST
+def strength_exercise_duplicate(request, pk):
+    ex = get_object_or_404(StrengthExercise, pk=pk, workout__user=request.user)
+    copy = _copy_exercise(ex, ex.workout)
+    return render(
+        request, "workouts/_strength_exercise.html", {"ex": copy, "is_owner": True}
+    )
 
 
 # ---------------------------------------------------------------------------

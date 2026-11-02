@@ -10,12 +10,22 @@ urlpatterns = [
     path("workouts/<int:pk>/confirm/", views.workout_confirm, name="workout-confirm"),
     path("workouts/<int:pk>/delete/", views.workout_delete, name="workout-delete"),
     path(
+        "workouts/<int:pk>/duplicate/",
+        views.workout_duplicate,
+        name="workout-duplicate",
+    ),
+    path(
         "workouts/<int:workout_pk>/cardio/add/",
         views.cardio_exercise_add,
         name="cardio-exercise-add",
     ),
     path(
         "cardio/<int:pk>/edit/", views.cardio_exercise_edit, name="cardio-exercise-edit"
+    ),
+    path(
+        "cardio/<int:pk>/duplicate/",
+        views.cardio_exercise_duplicate,
+        name="cardio-exercise-duplicate",
     ),
     path(
         "cardio/<int:pk>/delete/",
@@ -31,6 +41,11 @@ urlpatterns = [
         "strength/<int:pk>/edit/",
         views.strength_exercise_edit,
         name="strength-exercise-edit",
+    ),
+    path(
+        "strength/<int:pk>/duplicate/",
+        views.strength_exercise_duplicate,
+        name="strength-exercise-duplicate",
     ),
     path(
         "strength/<int:pk>/delete/",

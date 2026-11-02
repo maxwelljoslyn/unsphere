@@ -3,6 +3,9 @@
   <button hx-get="{% url 'cardio-exercise-edit' ex.pk %}"
           hx-target="#cardio-exercise-{{ ex.pk }}"
           hx-swap="outerHTML">Edit</button>
+  <button hx-post="{% url 'cardio-exercise-duplicate' ex.pk %}"
+          hx-target="#cardio-exercise-{{ ex.pk }}"
+          hx-swap="afterend">Duplicate</button>
   <button hx-delete="{% url 'cardio-exercise-delete' ex.pk %}"
           hx-target="#cardio-exercise-{{ ex.pk }}"
           hx-swap="outerHTML"

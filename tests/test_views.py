@@ -376,3 +376,96 @@ def test_unit_options_are_alphabetized():
         unit_select = bound.field.widget.widgets[1]
         labels = [label for value, label in unit_select.choices if value]
         assert labels == sorted(labels, key=str.lower)
+
+
+# --- Duplication ------------------------------------------------------------
+
+
+def test_workout_duplicate_copies_exercises_into_new_draft(
+    auth_client, user, workout, cardio_movement, strength_movement
+):
+    from unsphere.units import u
+
+    workout.notes = "leg day"
+    workout.timezone = "America/Los_Angeles"
+    workout.confirmed_at = dt.datetime(2026, 1, 1, 9, 0, tzinfo=dt.timezone.utc)
+    workout.save()
+    CardioExercise.objects.create(
+        workout=workout, movement=cardio_movement, distance=u("3 mile")
+    )
+    StrengthExercise.objects.create(
+        workout=workout, movement=strength_movement, sets=3, reps=5, weight=u("100 pound")
+    )
+
+    resp = auth_client.post(reverse("workout-duplicate", args=[workout.pk]))
+    copy = Workout.objects.exclude(pk=workout.pk).get()
+    assert resp.status_code == 302
+    assert resp.url == reverse("workout-detail", args=[copy.pk])
+    assert copy.user == user
+    assert copy.is_draft
+    assert copy.notes == "leg day"
+    assert copy.timezone == "America/Los_Angeles"
+    assert copy.date > workout.date
+    (c,) = copy.cardioexercises.all()
+    assert c.movement == cardio_movement and c.distance == u("3 mile")
+    (s,) = copy.strengthexercises.all()
+    assert (s.sets, s.reps, s.weight) == (3, 5, u("100 pound"))
+    # The original is untouched.
+    assert workout.cardioexercises.count() == 1
+    assert workout.strengthexercises.count() == 1
+
+
+def test_workout_duplicate_rejects_get(auth_client, workout):
+    resp = auth_client.get(reverse("workout-duplicate", args=[workout.pk]))
+    assert resp.status_code == 405
+
+
+def test_workout_duplicate_of_others_workout(client, django_user_model, workout):
+    bob = django_user_model.objects.create_user(username="bob", password="pw")
+    client.force_login(bob)
+    # Another user's draft is private.
+    resp = client.post(reverse("workout-duplicate", args=[workout.pk]))
+    assert resp.status_code == 404
+    # A confirmed workout can be copied, and the copy belongs to the requester.
+    workout.confirmed_at = workout.date
+    workout.save()
+    resp = client.post(reverse("workout-duplicate", args=[workout.pk]))
+    assert resp.status_code == 302
+    assert Workout.objects.get(user=bob).is_draft
+
+
+def test_cardio_duplicate(auth_client, workout, cardio_movement):
+    from unsphere.units import u
+
+    ex = CardioExercise.objects.create(
+        workout=workout, movement=cardio_movement, duration=u("20 min"), notes="easy"
+    )
+    resp = auth_client.post(reverse("cardio-exercise-duplicate", args=[ex.pk]))
+    assert resp.status_code == 200
+    copy = workout.cardioexercises.exclude(pk=ex.pk).get()
+    assert copy.duration == u("20 min") and copy.notes == "easy"
+    assert f'id="cardio-exercise-{copy.pk}"' in resp.content.decode()
+
+
+def test_strength_duplicate(auth_client, workout, strength_movement):
+    ex = StrengthExercise.objects.create(
+        workout=workout, movement=strength_movement, sets=3, reps=10
+    )
+    resp = auth_client.post(reverse("strength-exercise-duplicate", args=[ex.pk]))
+    assert resp.status_code == 200
+    copy = workout.strengthexercises.exclude(pk=ex.pk).get()
+    assert (copy.sets, copy.reps) == (3, 10)
+    assert f'id="strength-exercise-{copy.pk}"' in resp.content.decode()
+
+
+def test_exercise_duplicate_scoped_to_owner(
+    client, django_user_model, workout, strength_movement
+):
+    ex = StrengthExercise.objects.create(
+        workout=workout, movement=strength_movement, sets=3, reps=10
+    )
+    bob = django_user_model.objects.create_user(username="bob", password="pw")
+    client.force_login(bob)
+    resp = client.post(reverse("strength-exercise-duplicate", args=[ex.pk]))
+    assert resp.status_code == 404
+    assert workout.strengthexercises.count() == 1
