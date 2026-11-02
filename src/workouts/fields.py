@@ -42,13 +42,52 @@ class PintField(models.CharField):
 # ---------------------------------------------------------------------------
 
 
+def _sort_key(text):
+    return str(text).casefold()
+
+
+def alphabetize_choices(choices):
+    """Return `choices` sorted alphabetically by label, case-insensitively.
+
+    Blank/placeholder options (value "" or None) stay first, in their original
+    order. Grouped choices (`(group_name, [(value, label), ...])`) are sorted by
+    group name, and the options inside each group are sorted too.
+    """
+    blank, items = [], []
+    for value, label in choices:
+        if isinstance(label, (list, tuple)):
+            items.append((value, alphabetize_choices(label), _sort_key(value)))
+        elif value in ("", None):
+            blank.append((value, label))
+        else:
+            items.append((value, label, _sort_key(label)))
+    items.sort(key=lambda item: item[2])
+    return blank + [(value, label) for value, label, _key in items]
+
+
+class AlphabeticalSelect(forms.Select):
+    """A <select> that always renders its options in alphabetical order.
+
+    Sorting happens at render time, so it covers static choices and querysets
+    alike, regardless of how the underlying choices are ordered.
+    """
+
+    def optgroups(self, name, value, attrs=None):
+        original = self.choices
+        self.choices = alphabetize_choices(original)
+        try:
+            return super().optgroups(name, value, attrs)
+        finally:
+            self.choices = original
+
+
 class PintWidget(forms.MultiWidget):
     """[magnitude: number input, unit: select of allowed units]"""
 
     def __init__(self, unit_choices, attrs=None):
         widgets = [
             forms.NumberInput(attrs={"step": "any", "min": "0"}),
-            forms.Select(choices=unit_choices),
+            AlphabeticalSelect(choices=unit_choices),
         ]
         super().__init__(widgets, attrs)
 
@@ -108,22 +147,28 @@ class PintTimeWidget(forms.MultiWidget):
 # Allowed units
 # ---------------------------------------------------------------------------
 
-# Each choice is (value, label). The value is the canonical pint unit name that
-# PintWidget.decompress emits for an existing quantity, so stored values
-# round-trip to the matching <option>. Labels are the friendly forms, and the
-# lists are kept alphabetized by label (that's the order they appear in the
-# <select>).
+# Each choice is (value, label), grouped into customary and metric units (each
+# group renders as an <optgroup>). The value is the canonical pint unit name
+# that PintWidget.decompress emits for an existing quantity, so stored values
+# round-trip to the matching <option>. Labels are the friendly forms. The
+# <select> renders groups and options alphabetically (see AlphabeticalSelect).
 DISTANCE_UNITS = [
-    ("foot", "feet"),
-    ("kilometer", "km"),
-    ("meter", "meters"),
-    ("mile", "miles"),
+    ("Customary", [("foot", "feet"), ("mile", "miles")]),
+    ("Metric", [("kilometer", "km"), ("meter", "meters")]),
 ]
 
 WEIGHT_UNITS = [
-    ("kilogram", "kg"),
-    ("pound", "lbs"),
+    ("Customary", [("pound", "lbs")]),
+    ("Metric", [("kilogram", "kg")]),
 ]
+
+
+def _flatten_choices(choices):
+    for value, label in choices:
+        if isinstance(label, (list, tuple)):
+            yield from _flatten_choices(label)
+        else:
+            yield value, label
 
 
 # ---------------------------------------------------------------------------
@@ -133,7 +178,7 @@ WEIGHT_UNITS = [
 
 class PintFormField(forms.MultiValueField):
     def __init__(self, unit_choices, *args, **kwargs):
-        self.allowed_units = {value for value, _label in unit_choices}
+        self.allowed_units = {value for value, _label in _flatten_choices(unit_choices)}
         choices = [("", "unit")] + list(unit_choices)
         self.widget = PintWidget(choices)
         fields = [

@@ -2,10 +2,10 @@ from zoneinfo import ZoneInfo
 
 from django import forms
 from django.conf import settings
-from django.db.models.functions import Lower
 
 from .fields import (
     DISTANCE_UNITS,
+    AlphabeticalSelect,
     WEIGHT_UNITS,
     PintFormField,
     PintTimeFormField,
@@ -20,7 +20,25 @@ def _safe_zone(name):
         return ZoneInfo(settings.TIME_ZONE)
 
 
-class FeedbackForm(forms.Form):
+class AlphabetizedSelectsMixin:
+    """Render every plain <select> on the form in alphabetical order.
+
+    Swaps each field's stock `forms.Select` for `AlphabeticalSelect`, which
+    sorts at render time, so choices added or narrowed later in a subclass's
+    __init__ (e.g. a ModelChoiceField queryset) are sorted too. Mix this into
+    any form that has a select.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            # Widgets are per-form deep copies, so changing the class in place
+            # is safe; AlphabeticalSelect adds behaviour but no state.
+            if type(field.widget) is forms.Select:
+                field.widget.__class__ = AlphabeticalSelect
+
+
+class FeedbackForm(AlphabetizedSelectsMixin, forms.Form):
     title = forms.CharField(
         max_length=200,
         widget=forms.TextInput(attrs={"placeholder": "Brief summary of the issue"}),
@@ -35,7 +53,7 @@ class FeedbackForm(forms.Form):
     )
 
 
-class WorkoutForm(forms.ModelForm):
+class WorkoutForm(AlphabetizedSelectsMixin, forms.ModelForm):
     # Populated client-side from the browser's zone (see workout_form.html). The
     # datetime-local picker only gives a naive wall-clock time, so we pair it
     # with the zone that wall-clock was read in.
@@ -80,13 +98,13 @@ class WorkoutForm(forms.ModelForm):
         return cleaned
 
 
-class MovementForm(forms.ModelForm):
+class MovementForm(AlphabetizedSelectsMixin, forms.ModelForm):
     class Meta:
         model = Movement
         fields = ["name", "kind"]
 
 
-class CardioExerciseForm(forms.ModelForm):
+class CardioExerciseForm(AlphabetizedSelectsMixin, forms.ModelForm):
     distance = PintFormField(DISTANCE_UNITS, required=False)
     duration = PintTimeFormField(required=False)
 
@@ -96,12 +114,10 @@ class CardioExerciseForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["movement"].queryset = Movement.objects.filter(
-            kind=Movement.CARDIO
-        ).order_by(Lower("name"))
+        self.fields["movement"].queryset = Movement.objects.filter(kind=Movement.CARDIO)
 
 
-class StrengthExerciseForm(forms.ModelForm):
+class StrengthExerciseForm(AlphabetizedSelectsMixin, forms.ModelForm):
     weight = PintFormField(WEIGHT_UNITS, required=False)
 
     class Meta:
@@ -112,4 +128,4 @@ class StrengthExerciseForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["movement"].queryset = Movement.objects.filter(
             kind=Movement.STRENGTH
-        ).order_by(Lower("name"))
+        )

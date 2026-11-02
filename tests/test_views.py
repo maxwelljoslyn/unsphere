@@ -349,8 +349,24 @@ def test_feedback_form_disables_submit_after_click(auth_client):
 # --- Alphabetized <option> lists --------------------------------------------
 
 
-def _option_labels(field):
-    return [str(label) for _value, label in field.field.widget.choices if _value]
+def _rendered_options(html):
+    """[(optgroup label or None, option text), ...] in rendered order."""
+    import re
+
+    out, group = [], None
+    for m in re.finditer(r'<optgroup label="([^"]*)">|</optgroup>|<option[^>]*>([^<]*)</option>', html):
+        if m.group(0) == "</optgroup>":
+            group = None
+        elif m.group(1) is not None:
+            group = m.group(1)
+        else:
+            out.append((group, m.group(2)))
+    return out
+
+
+def _assert_alphabetical(options):
+    labels = [label for _group, label in options]
+    assert labels == sorted(labels, key=str.casefold)
 
 
 @pytest.mark.django_db
@@ -363,19 +379,50 @@ def test_movement_options_are_alphabetized():
     Movement.objects.create(name="arnold press", kind=Movement.STRENGTH)
 
     for form in (CardioExerciseForm(), StrengthExerciseForm()):
-        labels = _option_labels(form["movement"])
-        assert labels == sorted(labels, key=str.lower)
-        assert len(labels) >= 2
+        options = _rendered_options(str(form["movement"]))
+        assert options[0][1] == "---------"  # placeholder stays first
+        _assert_alphabetical(options[1:])
+        assert len(options) >= 3
 
 
-@pytest.mark.django_db
-def test_unit_options_are_alphabetized():
+def test_movement_kind_options_are_alphabetized():
+    from workouts.forms import MovementForm
+
+    options = _rendered_options(str(MovementForm()["kind"]))
+    assert options[0][1] == "---------"
+    _assert_alphabetical(options[1:])
+
+
+def test_unit_options_grouped_into_customary_and_metric():
     from workouts.forms import CardioExerciseForm, StrengthExerciseForm
 
-    for bound in (CardioExerciseForm()["distance"], StrengthExerciseForm()["weight"]):
-        unit_select = bound.field.widget.widgets[1]
-        labels = [label for value, label in unit_select.choices if value]
-        assert labels == sorted(labels, key=str.lower)
+    distance = _rendered_options(str(CardioExerciseForm()["distance"]))
+    assert distance == [
+        (None, "unit"),
+        ("Customary", "feet"),
+        ("Customary", "miles"),
+        ("Metric", "km"),
+        ("Metric", "meters"),
+    ]
+    weight = _rendered_options(str(StrengthExerciseForm()["weight"]))
+    assert weight == [(None, "unit"), ("Customary", "lbs"), ("Metric", "kg")]
+
+
+def test_grouped_unit_still_round_trips():
+    from unsphere.units import u
+    from workouts.fields import DISTANCE_UNITS, PintFormField
+
+    field = PintFormField(DISTANCE_UNITS)
+    assert field.clean(["5", "kilometer"]) == u("5 kilometer")
+    assert 'value="kilometer" selected' in field.widget.render("d", u("5 kilometer"))
+
+
+def test_alphabetize_choices():
+    from workouts.fields import alphabetize_choices
+
+    assert alphabetize_choices(
+        [("", "pick"), ("b", "beta"), ("g", [("z", "Zed"), ("a", "alpha")]), ("A", "Apple")]
+    ) == [("", "pick"), ("A", "Apple"), ("b", "beta"), ("g", [("a", "alpha"), ("z", "Zed")])]
 
 
 # --- Duplication ------------------------------------------------------------
