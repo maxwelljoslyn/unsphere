@@ -372,6 +372,8 @@ def feedback(request):
                     "title": form.cleaned_data["title"],
                     "body": body,
                     "labels": ["user-feedback"],
+                    # Assign to the repo owner so submissions land in their queue.
+                    "assignees": [repo.split("/")[0]],
                 }
             ).encode()
             req = Request(

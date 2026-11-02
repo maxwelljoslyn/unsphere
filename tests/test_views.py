@@ -469,3 +469,23 @@ def test_exercise_duplicate_scoped_to_owner(
     resp = client.post(reverse("strength-exercise-duplicate", args=[ex.pk]))
     assert resp.status_code == 404
     assert workout.strengthexercises.count() == 1
+
+
+def test_feedback_issue_assigned_to_repo_owner(auth_client, settings, monkeypatch):
+    import json
+
+    from workouts import views
+
+    settings.GITHUB_FEEDBACK_REPO = "maxwelljoslyn/unsphere"
+    settings.GITHUB_FEEDBACK_TOKEN = "t"
+    sent = []
+    monkeypatch.setattr(views, "urlopen", lambda req: sent.append(req))
+
+    resp = auth_client.post(
+        reverse("feedback"), {"title": "Bug", "description": "It broke"}
+    )
+    assert resp.status_code == 302
+    (req,) = sent
+    payload = json.loads(req.data)
+    assert payload["assignees"] == ["maxwelljoslyn"]
+    assert payload["labels"] == ["user-feedback"]
